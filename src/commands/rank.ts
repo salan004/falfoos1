@@ -1,9 +1,9 @@
-import { ChatInputCommandInteraction } from 'discord.js';
+import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 import { getUser, getUserRank, upsertUser } from '../database/users';
 import { buildRankEmbed } from '../utils/embedBuilder';
 
 export async function handleRankCommand(interaction: ChatInputCommandInteraction): Promise<void> {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   const userId = interaction.user.id;
   const guildId = interaction.guildId!;

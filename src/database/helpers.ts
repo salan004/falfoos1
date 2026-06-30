@@ -47,17 +47,41 @@ export function executeBatch(sql: string): void {
   saveDb();
 }
 
+let transactionDepth = 0;
+
 export function beginTransaction(): void {
-  getDb().run('BEGIN TRANSACTION');
+  const db = getDb();
+  if (transactionDepth === 0) {
+    db.run('BEGIN TRANSACTION');
+  } else {
+    db.run(`SAVEPOINT sp_${transactionDepth}`);
+  }
+  transactionDepth++;
 }
 
 export function commitTransaction(): void {
-  getDb().run('COMMIT');
-  saveDb();
+  const db = getDb();
+  if (transactionDepth <= 0) {
+    throw new Error('No active transaction to commit');
+  }
+  transactionDepth--;
+  if (transactionDepth === 0) {
+    db.run('COMMIT');
+    saveDb();
+  } else {
+    db.run(`RELEASE sp_${transactionDepth}`);
+  }
 }
 
 export function rollbackTransaction(): void {
-  getDb().run('ROLLBACK');
+  const db = getDb();
+  if (transactionDepth <= 0) return;
+  transactionDepth--;
+  if (transactionDepth === 0) {
+    db.run('ROLLBACK');
+  } else {
+    db.run(`ROLLBACK TO sp_${transactionDepth}`);
+  }
 }
 
 export function execInTransaction(sql: string, params?: unknown[]): void {

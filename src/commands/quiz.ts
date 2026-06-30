@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, TextChannel } from 'discord.js';
+import { ChatInputCommandInteraction, TextChannel, MessageFlags } from 'discord.js';
 import { startQuiz } from '../services/quizService';
 
 function getQuizOptions(interaction: ChatInputCommandInteraction): {
@@ -19,7 +19,7 @@ function getQuizOptions(interaction: ChatInputCommandInteraction): {
 }
 
 export async function handleQuizCommand(interaction: ChatInputCommandInteraction): Promise<void> {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   const { totalQuestions, categoryId } = getQuizOptions(interaction);
 

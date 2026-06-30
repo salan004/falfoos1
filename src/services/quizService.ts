@@ -7,6 +7,7 @@ import {
   ButtonBuilder,
   ButtonStyle,
   ComponentType,
+  MessageFlags,
 } from 'discord.js';
 import { config } from '../config';
 import { QuizState, AnswerRecord, QuestionRoundState, ParticipantData, RoundParticipantResult } from '../types/quiz';
@@ -213,7 +214,7 @@ async function startRegistrationPhase(channel: TextChannel, quizState: QuizState
     if (quizState.registration.registeredUsers.has(i.user.id)) {
       await i.reply({
         content: '✅ أنت مسجل بالفعل في المسابقة!',
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -232,7 +233,7 @@ async function startRegistrationPhase(channel: TextChannel, quizState: QuizState
 
     await i.reply({
       content: `✅ تم تسجيلك في المسابقة! عدد المسجلين: ${count}`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   });
 
@@ -384,7 +385,7 @@ async function sendNextQuestion(channel: TextChannel, quizState: QuizState): Pro
 
     await i.reply({
       content: `✅ تم تسجيل إجابتك: ${LETTER_LABELS[letter]}`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   });
 

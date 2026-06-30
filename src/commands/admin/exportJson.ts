@@ -1,9 +1,9 @@
-import { ChatInputCommandInteraction, AttachmentBuilder } from 'discord.js';
+import { ChatInputCommandInteraction, AttachmentBuilder, MessageFlags } from 'discord.js';
 import { requireAdmin } from '../../utils/adminCommand';
 import { getAllQuestions } from '../../database/questions';
 
 export async function handleExportJson(interaction: ChatInputCommandInteraction): Promise<void> {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   if (!(await requireAdmin(interaction))) return;
 

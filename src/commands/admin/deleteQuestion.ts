@@ -1,9 +1,9 @@
-import { ChatInputCommandInteraction } from 'discord.js';
+import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 import { requireAdmin } from '../../utils/adminCommand';
 import { deleteQuestion } from '../../database/questions';
 
 export async function handleDeleteQuestion(interaction: ChatInputCommandInteraction): Promise<void> {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   if (!(await requireAdmin(interaction))) return;
 

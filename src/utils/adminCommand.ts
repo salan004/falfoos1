@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, GuildMember } from 'discord.js';
+import { ChatInputCommandInteraction, GuildMember, MessageFlags } from 'discord.js';
 import { isAdmin } from './permissions';
 
 export async function requireAdmin(interaction: ChatInputCommandInteraction): Promise<boolean> {
@@ -8,7 +8,7 @@ export async function requireAdmin(interaction: ChatInputCommandInteraction): Pr
     if (interaction.deferred || interaction.replied) {
       await interaction.editReply({ content }).catch(() => {});
     } else {
-      await interaction.reply({ content, ephemeral: true }).catch(() => {});
+      await interaction.reply({ content, flags: MessageFlags.Ephemeral }).catch(() => {});
     }
     return false;
   }

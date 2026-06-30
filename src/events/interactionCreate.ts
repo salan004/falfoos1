@@ -1,4 +1,4 @@
-import { Events, ChatInputCommandInteraction } from 'discord.js';
+import { Events, ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 import { client } from '../client';
 import { handleQuizCommand } from '../commands/quiz';
 import { handleLeaderboardCommand } from '../commands/leaderboard';
@@ -55,7 +55,7 @@ export function registerInteractionEvent(): void {
         if (interaction.replied || interaction.deferred) {
           await interaction.editReply({ content: errMsg }).catch(() => {});
         } else {
-          await interaction.reply({ content: errMsg, ephemeral: true }).catch(() => {});
+          await interaction.reply({ content: errMsg, flags: MessageFlags.Ephemeral }).catch(() => {});
         }
       }
     }

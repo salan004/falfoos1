@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction } from 'discord.js';
+import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 import { requireAdmin } from '../../utils/adminCommand';
 import { addQuestion } from '../../database/questions';
 
@@ -20,7 +20,7 @@ function getAddQuestionInputs(interaction: ChatInputCommandInteraction) {
 }
 
 export async function handleAddQuestion(interaction: ChatInputCommandInteraction): Promise<void> {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   if (!(await requireAdmin(interaction))) return;
 

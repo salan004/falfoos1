@@ -1,8 +1,8 @@
-import { ChatInputCommandInteraction, TextChannel } from 'discord.js';
+import { ChatInputCommandInteraction, TextChannel, MessageFlags } from 'discord.js';
 import { skipCurrentQuestion } from '../services/quizService';
 
 export async function handleSkipCommand(interaction: ChatInputCommandInteraction): Promise<void> {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   const channel = interaction.channel;
   if (!channel || !channel.isTextBased() || !(channel instanceof TextChannel)) {

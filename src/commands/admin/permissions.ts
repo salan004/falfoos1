@@ -1,9 +1,9 @@
-import { ChatInputCommandInteraction } from 'discord.js';
+import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 import { requireAdmin } from '../../utils/adminCommand';
 import { config } from '../../config';
 
 export async function handlePermissionsCommand(interaction: ChatInputCommandInteraction): Promise<void> {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   if (!(await requireAdmin(interaction))) return;
 
