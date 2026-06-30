@@ -65,6 +65,8 @@ export interface QuizState {
   coinsEarned: number;
   round: QuestionRoundState | null;
   registration: RegistrationState | null;
+  totalRegistered: number;
+  registeredUsers: Set<string>;
   participants: Map<string, ParticipantData>;
   preQuizUserSnapshot: {
     points: number;

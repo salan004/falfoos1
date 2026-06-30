@@ -5,8 +5,6 @@ import { initializeSchema } from './database/schema';
 import { seedDatabase } from './database/seed';
 import { registerReadyEvent } from './events/ready';
 import { registerInteractionEvent } from './events/interactionCreate';
-import { registerPollVoteEvents } from './events/pollVotes';
-
 async function main() {
   if (!config.token) {
     console.error('❌ لم يتم تعيين BOT_TOKEN في ملف .env');
@@ -22,7 +20,6 @@ async function main() {
 
   registerReadyEvent();
   registerInteractionEvent();
-  registerPollVoteEvents();
 
   await client.login(config.token);
   console.log('✅ البوت يعمل!');

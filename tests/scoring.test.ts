@@ -43,6 +43,8 @@ function makeQuizState(overrides: Partial<QuizState> = {}): QuizState {
     coinsEarned: 0,
     round: null,
     participants: new Map(),
+    totalRegistered: 0,
+    registeredUsers: new Set<string>(),
     preQuizUserSnapshot: null,
     ...overrides,
   };

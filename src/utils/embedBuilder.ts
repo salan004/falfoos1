@@ -7,6 +7,7 @@ export function buildActiveQuizEmbed(
   questionNumber: number,
   totalQuestions: number,
   remainingSeconds: number,
+  totalRegistered: number,
 ): EmbedBuilder {
   const difficultyStars = '⭐'.repeat(question.difficulty);
   const options = getQuestionOptions(question);
@@ -22,7 +23,9 @@ export function buildActiveQuizEmbed(
       `**${LETTER_LABELS.B}** ─ ${options.B}\n` +
       `**${LETTER_LABELS.C}** ─ ${options.C}\n` +
       `**${LETTER_LABELS.D}** ─ ${options.D}\n\n` +
-      'صوّت باستخدام الاستطلاع أدناه للإجابة.',
+      `👥 **المسجلون:** ${totalRegistered}\n\n` +
+      'صوّت باستخدام الاستطلاع أدناه للإجابة.\n' +
+      '⚠️ فقط المسجلون تحتسب أصواتهم.',
     )
     .setFooter({ text: 'صوّت في الاستطلاع • إجابة واحدة فقط' })
     .setTimestamp();
@@ -34,6 +37,7 @@ export function buildQuizRevealEmbed(
   totalQuestions: number,
   durationMs: number,
   winnerIds: string[],
+  totalRegistered: number,
 ): EmbedBuilder {
   const difficultyStars = '⭐'.repeat(question.difficulty);
   const correctLabel = getCorrectAnswerLabel(question);
@@ -56,7 +60,8 @@ export function buildQuizRevealEmbed(
       `> ${question.questionAr}\n\n` +
       `✅ **الإجابة الصحيحة:** ${correctLetter} ─ ${correctLabel}\n` +
       explanationLine +
-      `⏱ **مدة السؤال:** ${durationSeconds}ث\n\n` +
+      `⏱ **مدة السؤال:** ${durationSeconds}ث\n` +
+      `👥 **المسجلون:** ${totalRegistered}\n\n` +
       `🏆 **الإجابات الصحيحة**\n${winnersSection}`,
     )
     .setTimestamp();
@@ -77,48 +82,48 @@ export function buildFinalResultsEmbed(
   totalParticipants: number,
   accuracyRate: number,
   quizDuration: number,
+  winnerAvatarUrl: string = '',
 ): EmbedBuilder {
   const accuracy = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
 
-  const top3Lines: string[] = [];
+  const topLines: string[] = [];
   const positionEmojis: Record<number, string> = { 1: '🥇👑', 2: '🥈', 3: '🥉' };
 
-  for (const p of topParticipants.slice(0, 3)) {
+  for (const p of topParticipants) {
     const pos = positions.get(p.userId) || 0;
-    const emoji = positionEmojis[pos] || '';
-    top3Lines.push(
-      `${emoji} **<@${p.userId}>** (+${p.pointsEarned})`,
+    const emoji = positionEmojis[pos] || `${pos}.`;
+    const pTotal = p.correctCount + p.wrongCount;
+    const pAcc = pTotal > 0 ? Math.round((p.correctCount / pTotal) * 100) : 0;
+    topLines.push(
+      `${emoji} **<@${p.userId}>** — ✅${p.correctCount} ❌${p.wrongCount} 🎯+${p.pointsEarned} (${pAcc}%)`,
     );
   }
 
-  const topSection = top3Lines.length > 0 ? top3Lines.join('\n') : 'لا يوجد مشاركون';
-
-  const restLines = topParticipants.slice(3).map(p => {
-    const pos = positions.get(p.userId) || 0;
-    return `${pos}. **<@${p.userId}>** (+${p.pointsEarned})`;
-  });
+  const participantsSection = topLines.length > 0 ? topLines.join('\n') : 'لا يوجد مشاركون';
 
   const description = [
-    `🏆 **نتائج المسابقة**\n`,
-    topSection,
-    restLines.length > 0 ? `\n${restLines.join('\n')}` : '',
+    `━━━━━━━━━━━━━━━━━━\n`,
+    participantsSection,
     `\n━━━━━━━━━━━━━━━━━━`,
-    `✅ **الإجابة الصحيحة:** تم عرضها`,
-    `📖 **الإجابات الصحيحة:** ${correctCount}/${totalQuestions}`,
-    `👥 **عدد المشاركين:** ${totalParticipants}`,
-    `🎯 **نسبة الدقة:** ${accuracyRate}%`,
-    `⏱ **مدة الاختبار:** ${quizDuration}ث`,
+    `📊 **نتائجك:** ✅ ${correctCount}/${totalQuestions} | ❌ ${wrongCount} | ⏭ ${skippedCount}`,
+    `👥 **المشاركون:** ${totalParticipants} | 🎯 **الدقة:** ${accuracyRate}% | ⏱ **المدة:** ${Math.floor(quizDuration / 60)}:${(quizDuration % 60).toString().padStart(2, '0')}`,
     `━━━━━━━━━━━━━━━━━━`,
     `**نقاطك:** +${pointsEarned} 🎯`,
     `**المستوى:** ${level} 📈`,
     levelUp ? '🎉 **تهانينا! لقد ارتفع مستواك!**' : '',
   ].filter(Boolean).join('\n');
 
-  return new EmbedBuilder()
+  const embed = new EmbedBuilder()
     .setColor(levelUp ? '#ffd700' : '#1a7c3a' as ColorResolvable)
     .setTitle('🏆 نتائج المسابقة')
     .setDescription(description)
     .setTimestamp();
+
+  if (winnerAvatarUrl) {
+    embed.setThumbnail(winnerAvatarUrl);
+  }
+
+  return embed;
 }
 
 export function buildLeaderboardEmbed(
@@ -193,7 +198,12 @@ export function buildRegistrationEmbed(
   remainingSeconds: number,
   registeredCount: number,
   endTimestamp: number,
+  registeredUsers: Set<string> = new Set(),
 ): EmbedBuilder {
+  const membersList = registeredUsers.size > 0
+    ? Array.from(registeredUsers).map(id => `• <@${id}>`).join('\n')
+    : 'لا يوجد مسجلين بعد.';
+
   return new EmbedBuilder()
     .setColor('#1a7c3a' as ColorResolvable)
     .setTitle('📖 بدأت المسابقة الدينية')
@@ -202,9 +212,10 @@ export function buildRegistrationEmbed(
       `⌛ **الوقت المتبقي:** <t:${endTimestamp}:R>\n` +
       `　　（${remainingSeconds} ثانية）\n\n` +
       `👥 **عدد المسجلين:** ${registeredCount}\n\n` +
+      `━━━━━━━━━━━━━━━━━━\n\n` +
+      `**المسجلون:**\n${membersList}\n\n` +
+      `━━━━━━━━━━━━━━━━━━\n\n` +
       `✅ **الحد الأدنى:** 2 متسابقين\n\n` +
-      `♾️ **الحد الأقصى:** غير محدود\n\n` +
-      '━━━━━━━━━━━━━━━━━━\n' +
       'اضغط على زر **انضمام** للمشاركة.',
     )
     .setFooter({ text: 'سيبدأ الاختبار تلقائياً بعد انتهاء التسجيل' })
@@ -217,6 +228,7 @@ export function buildQuestionResultsEmbed(
   totalQuestions: number,
   winnerIds: string[],
   totalVoters: number,
+  totalRegistered: number,
 ): EmbedBuilder {
   const correctLabel = getCorrectAnswerLabel(question);
   const options = getQuestionOptions(question);
@@ -249,7 +261,8 @@ export function buildQuestionResultsEmbed(
       `✅ **الإجابة الصحيحة:**\n${correctLetterAr} ─ ${correctLabel}\n\n` +
       `${optionsLines.join('\n')}\n\n` +
       `━━━━━━━━━━━━━━━━━━\n\n` +
-      `👥 **عدد المشاركين:** ${totalVoters}\n\n` +
+      `👥 **المسجلون في المسابقة:** ${totalRegistered}\n` +
+      `👥 **المصوتون في هذا السؤال:** ${totalVoters}\n\n` +
       `🎯 **عدد الإجابات الصحيحة:** ${correctCount}\n\n` +
       `🏆 **الذين أجابوا بشكل صحيح:**\n${winnersSection}\n\n` +
       `━━━━━━━━━━━━━━━━━━`,

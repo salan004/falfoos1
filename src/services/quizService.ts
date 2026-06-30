@@ -1,7 +1,6 @@
 import {
   Collection,
   Message,
-  PollAnswer,
   TextChannel,
   Guild,
   ActionRowBuilder,
@@ -30,9 +29,7 @@ import {
 import {
   ANSWER_ID_MAP,
   ANSWER_ID_TO_LETTER,
-  ANSWER_LETTERS,
-  getQuestionOptions,
-  truncatePollText,
+  LETTER_LABELS,
 } from '../utils/quizHelpers';
 import {
   execInTransaction,
@@ -101,28 +98,6 @@ export function getQuizByMessageId(messageId: string): QuizState | undefined {
   return key ? activeQuizzes.get(key) : undefined;
 }
 
-export function handlePollVoteAdd(answer: PollAnswer, userId: string): void {
-  const messageId = answer.poll.messageId;
-  const quiz = getQuizByMessageId(messageId);
-  if (!quiz || !quiz.round || quiz.round.ended) return;
-
-  quiz.round.votes.set(userId, {
-    answerId: answer.id,
-    votedAt: Date.now(),
-  });
-}
-
-export function handlePollVoteRemove(answer: PollAnswer, userId: string): void {
-  const messageId = answer.poll.messageId;
-  const quiz = getQuizByMessageId(messageId);
-  if (!quiz || !quiz.round || quiz.round.ended) return;
-
-  const existing = quiz.round.votes.get(userId);
-  if (existing && existing.answerId === answer.id) {
-    quiz.round.votes.delete(userId);
-  }
-}
-
 export async function startQuiz(
   channel: TextChannel,
   userId: string,
@@ -177,6 +152,8 @@ export async function startQuiz(
       timerInterval: null,
       endTimeout: null,
     },
+    totalRegistered: 0,
+    registeredUsers: new Set<string>(),
     participants: new Map(),
     preQuizUserSnapshot: startUser
       ? {
@@ -208,7 +185,7 @@ async function startRegistrationPhase(channel: TextChannel, quizState: QuizState
   let message: Message;
   try {
     message = await channel.send({
-      embeds: [buildRegistrationEmbed(30, 0, endTimestamp)],
+      embeds: [buildRegistrationEmbed(30, 0, endTimestamp, quizState.registration?.registeredUsers || new Set())],
       components: [row],
     });
   } catch (err) {
@@ -247,7 +224,7 @@ async function startRegistrationPhase(channel: TextChannel, quizState: QuizState
 
     try {
       await message.edit({
-        embeds: [buildRegistrationEmbed(remainingSeconds, count, endTimestamp)],
+        embeds: [buildRegistrationEmbed(remainingSeconds, count, endTimestamp, quizState.registration.registeredUsers)],
         components: [row],
       });
     } catch { /* ignore */ }
@@ -277,7 +254,7 @@ async function startRegistrationPhase(channel: TextChannel, quizState: QuizState
 
     try {
       await message.edit({
-        embeds: [buildRegistrationEmbed(remainingSeconds, quizState.registration.registeredUsers.size, endTimestamp)],
+        embeds: [buildRegistrationEmbed(remainingSeconds, quizState.registration.registeredUsers.size, endTimestamp, quizState.registration.registeredUsers)],
         components: [row],
       });
     } catch {
@@ -303,6 +280,10 @@ async function endRegistrationPhase(channel: TextChannel, quizState: QuizState):
     } catch { /* ignore */ }
   }
 
+  if (quizState.registration) {
+    quizState.registeredUsers = quizState.registration.registeredUsers;
+    quizState.totalRegistered = quizState.registration.registeredUsers.size;
+  }
   quizState.registration = null;
 
   if (registeredCount < 2) {
@@ -347,23 +328,33 @@ async function sendNextQuestion(channel: TextChannel, quizState: QuizState): Pro
   quizState.round = round;
   round.questionStartedAt = Date.now();
 
-  const pollAnswers = ANSWER_LETTERS.map(letter => ({
-    text: truncatePollText(getQuestionOptions(question)[letter]),
-  }));
+  const buttonRows = [
+    new ActionRowBuilder<ButtonBuilder>().addComponents(
+      ...(['A', 'B'] as const).map(letter =>
+        new ButtonBuilder()
+          .setCustomId(`ans_${letter}_q${quizState.currentIndex}`)
+          .setLabel(LETTER_LABELS[letter])
+          .setStyle(ButtonStyle.Primary),
+      ),
+    ),
+    new ActionRowBuilder<ButtonBuilder>().addComponents(
+      ...(['C', 'D'] as const).map(letter =>
+        new ButtonBuilder()
+          .setCustomId(`ans_${letter}_q${quizState.currentIndex}`)
+          .setLabel(LETTER_LABELS[letter])
+          .setStyle(ButtonStyle.Primary),
+      ),
+    ),
+  ];
 
   let message: Message;
   try {
     message = await channel.send({
-      embeds: [buildActiveQuizEmbed(question, quizState.currentIndex + 1, quizState.totalQuestions, totalSeconds)],
-      poll: {
-        question: { text: truncatePollText(question.questionAr, 300) },
-        answers: pollAnswers,
-        duration: 24,
-        allowMultiselect: false,
-      },
+      embeds: [buildActiveQuizEmbed(question, quizState.currentIndex + 1, quizState.totalQuestions, totalSeconds, quizState.totalRegistered)],
+      components: buttonRows,
     });
   } catch (err) {
-    console.error('[QUIZ ERROR] Failed to send poll message:', err);
+    console.error('[QUIZ ERROR] Failed to send question message:', err);
     await channel.send({
       embeds: [buildErrorEmbed('فشل في بدء الاختبار. تأكد من صلاحيات البوت.')],
     });
@@ -374,21 +365,46 @@ async function sendNextQuestion(channel: TextChannel, quizState: QuizState): Pro
   quizState.messageId = message.id;
   messageQuizMap.set(message.id, getChannelQuizKey(quizState.guildId, quizState.channelId));
 
+  const collector = message.createMessageComponentCollector({
+    componentType: ComponentType.Button,
+    filter: i => i.customId.startsWith('ans_') && i.customId.endsWith(`_q${quizState.currentIndex}`),
+    time: config.quizTimeLimit,
+  });
+
+  collector.on('collect', async i => {
+    if (round.ended) return;
+
+    const letter = i.customId.split('_')[1] as 'A' | 'B' | 'C' | 'D';
+
+    round.votes.set(i.user.id, {
+      answerId: ANSWER_ID_MAP[letter],
+      votedAt: Date.now(),
+    });
+
+    await i.reply({
+      content: `✅ تم تسجيل إجابتك: ${LETTER_LABELS[letter]}`,
+      ephemeral: true,
+    });
+  });
+
+  collector.on('end', () => {
+    if (!round.ended) {
+      endQuestionRound(channel, quizState, 'timeout');
+    }
+  });
+
   let remainingSeconds = totalSeconds;
 
   round.timerInterval = setInterval(async () => {
     remainingSeconds--;
     if (remainingSeconds <= 0) {
       clearRoundTimers(round);
-      if (!round.ended) {
-        await endQuestionRound(channel, quizState, 'timeout');
-      }
       return;
     }
 
     try {
       await message.edit({
-        embeds: [buildActiveQuizEmbed(question, quizState.currentIndex + 1, quizState.totalQuestions, remainingSeconds)],
+        embeds: [buildActiveQuizEmbed(question, quizState.currentIndex + 1, quizState.totalQuestions, remainingSeconds, quizState.totalRegistered)],
       });
     } catch {
       clearRoundTimers(round);
@@ -419,19 +435,7 @@ async function endQuestionRound(
   const correctAnswerId = ANSWER_ID_MAP[question.correctAnswer];
   const deadline = round.questionStartedAt + config.quizTimeLimit;
 
-  const winnerIds = getCorrectVoters(round, correctAnswerId, deadline);
-
-  let pollMessage: Message | null = null;
-  if (quizState.messageId) {
-    pollMessage = await channel.messages.fetch(quizState.messageId).catch(() => null);
-    if (pollMessage?.poll && !pollMessage.poll.resultsFinalized) {
-      try {
-        await pollMessage.poll.end();
-      } catch (err) {
-        console.error('[QUIZ ERROR] Failed to end poll:', err);
-      }
-    }
-  }
+  const winnerIds = getCorrectVoters(round, correctAnswerId, deadline, quizState.registeredUsers);
 
   await recordRoundResults(quizState, question, round, winnerIds, channel.guild);
 
@@ -448,19 +452,43 @@ async function endQuestionRound(
 
   const totalVoters = round.votes.size;
 
-  if (pollMessage) {
+  const disabledRow1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    ...(['A', 'B'] as const).map(letter =>
+      new ButtonBuilder()
+        .setCustomId(`ans_${letter}_q${quizState.currentIndex}`)
+        .setLabel(LETTER_LABELS[letter])
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(true),
+    ),
+  );
+  const disabledRow2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    ...(['C', 'D'] as const).map(letter =>
+      new ButtonBuilder()
+        .setCustomId(`ans_${letter}_q${quizState.currentIndex}`)
+        .setLabel(LETTER_LABELS[letter])
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(true),
+    ),
+  );
+
+  if (quizState.messageId) {
     try {
-      await pollMessage.edit({
-        embeds: [
-          buildQuizRevealEmbed(
-            question,
-            quizState.currentIndex + 1,
-            quizState.totalQuestions,
-            durationMs,
-            winnerIds,
-          ),
-        ],
-      });
+      const msg = await channel.messages.fetch(quizState.messageId).catch(() => null);
+      if (msg) {
+        await msg.edit({
+          embeds: [
+            buildQuizRevealEmbed(
+              question,
+              quizState.currentIndex + 1,
+              quizState.totalQuestions,
+              durationMs,
+              winnerIds,
+              quizState.totalRegistered,
+            ),
+          ],
+          components: [disabledRow1, disabledRow2],
+        });
+      }
     } catch (err) {
       console.error('[QUIZ ERROR] Failed to update quiz message:', err);
     }
@@ -474,6 +502,7 @@ async function endQuestionRound(
         quizState.totalQuestions,
         winnerIds,
         totalVoters,
+        quizState.totalRegistered,
       )],
     });
   } catch (err) {
@@ -496,10 +525,12 @@ function getCorrectVoters(
   round: QuestionRoundState,
   correctAnswerId: number,
   deadline: number,
+  registeredUsers: Set<string>,
 ): string[] {
   const winners: string[] = [];
 
   for (const [userId, vote] of round.votes.entries()) {
+    if (!registeredUsers.has(userId)) continue;
     if (vote.answerId === correctAnswerId && vote.votedAt <= deadline) {
       winners.push(userId);
     }
@@ -519,6 +550,7 @@ async function recordRoundResults(
   const deadline = round.questionStartedAt + config.quizTimeLimit;
 
   for (const [userId, vote] of round.votes.entries()) {
+    if (!quizState.registeredUsers.has(userId)) continue;
     if (vote.votedAt > deadline) continue;
 
     const isCorrect = vote.answerId === correctAnswerId;
@@ -691,14 +723,20 @@ async function finishQuiz(channel: TextChannel, quizState: QuizState): Promise<v
   const earnedCoins = Math.max(results.totalCoins, recalculated.coins);
 
   const usernameMap = new Map<string, string>();
+  const avatarUrlMap = new Map<string, string>();
   for (const [uid] of quizState.participants) {
     try {
       const member = await channel.guild.members.fetch(uid).catch(() => null);
       usernameMap.set(uid, member?.user.username || 'مستخدم');
+      avatarUrlMap.set(uid, member?.user.displayAvatarURL({ size: 256 }) || '');
     } catch {
       usernameMap.set(uid, 'مستخدم');
+      avatarUrlMap.set(uid, '');
     }
   }
+
+  const firstPlaceUserId = Array.from(positions.entries()).find(([, pos]) => pos === 1)?.[0];
+  const winnerAvatarUrl = firstPlaceUserId ? avatarUrlMap.get(firstPlaceUserId) || '' : '';
 
   try {
     beginTransaction();
@@ -862,6 +900,7 @@ async function finishQuiz(channel: TextChannel, quizState: QuizState): Promise<v
     totalParticipants,
     accuracyRate,
     quizDuration,
+    winnerAvatarUrl,
   );
 
   try {
