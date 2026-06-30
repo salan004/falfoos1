@@ -119,5 +119,17 @@
     },
     "correct": "B",
     "difficulty": 3
+  },
+  {
+    "question_ar": "كم عدد أركان الإسلام؟",
+    "category": "عام",
+    "options": {
+      "A": "5",
+      "B": "6",
+      "C": "7",
+      "D": "4"
+    },
+    "correct": "A",
+    "difficulty": 1
   }
 ]

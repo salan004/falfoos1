@@ -1,6 +1,17 @@
 import { queryOne, queryAll, execute, executeInsert } from './helpers';
 import { Question } from '../types/quiz';
 
+const GENERAL_CATEGORY_EN = 'General';
+
+export function isGeneralCategory(categoryId: number): boolean {
+  const row = queryOne('SELECT name_en FROM categories WHERE id = ?', [categoryId]);
+  return row?.name_en === GENERAL_CATEGORY_EN;
+}
+
+export function getGeneralCategoryName(): string {
+  return GENERAL_CATEGORY_EN;
+}
+
 export function getRandomQuestion(categoryId?: number): Question | null {
   let sql = `
     SELECT q.*, c.name_ar as category_name
@@ -9,7 +20,7 @@ export function getRandomQuestion(categoryId?: number): Question | null {
   `;
   const params: unknown[] = [];
 
-  if (categoryId) {
+  if (categoryId && !isGeneralCategory(categoryId)) {
     sql += ' WHERE q.category_id = ?';
     params.push(categoryId);
   }
