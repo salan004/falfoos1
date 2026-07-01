@@ -1,9 +1,10 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, TextChannel } from 'discord.js';
+import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, TextChannel, GuildMember } from 'discord.js';
 import { addPendingSubmission, isDuplicateImage, getUserSubmissionCountToday, findGuildConfig, incrementUserSubmissions, updateUserProfile } from '../data/store';
 import { logCommand, logError } from '../utils/logger';
 import { t } from '../utils/i18n';
 import { reviewButtons, safeEmbed } from '../utils/embed';
 import { filterContent } from '../utils/contentFilter';
+import { isAdmin } from '../utils/permissions';
 import { MemeCategory } from '../types';
 
 export const data = new SlashCommandBuilder()
@@ -70,13 +71,16 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       return;
     }
 
-    const todayCount = getUserSubmissionCountToday(interaction.user.id);
-    if (todayCount >= 3) {
-      const embed = new EmbedBuilder()
-        .setColor(0xFF0000)
-        .setDescription(t('error.submit_limit'));
-      await interaction.editReply({ embeds: [embed] });
-      return;
+    const member = interaction.member;
+    if (!(member instanceof GuildMember && isAdmin(member))) {
+      const todayCount = getUserSubmissionCountToday(interaction.user.id);
+      if (todayCount >= 3) {
+        const embed = new EmbedBuilder()
+          .setColor(0xFF0000)
+          .setDescription(t('error.submit_limit'));
+        await interaction.editReply({ embeds: [embed] });
+        return;
+      }
     }
 
     if (isDuplicateImage(image.url)) {
