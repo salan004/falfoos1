@@ -16,7 +16,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       const embed = new EmbedBuilder()
         .setColor(0xFF0000)
         .setDescription(t('error.cooldown', { seconds: cooldown.remainingSeconds }));
-      await interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.reply({ embeds: [embed], flags: ['Ephemeral'] });
       return;
     }
 
@@ -48,7 +48,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     if (interaction.deferred) {
       await interaction.editReply({ embeds: [embed] });
     } else {
-      await interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.reply({ embeds: [embed], flags: ['Ephemeral'] });
     }
   }
 }

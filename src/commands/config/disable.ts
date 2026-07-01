@@ -11,7 +11,7 @@ export const data = {
 
 export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
   try {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: ['Ephemeral'] });
 
     upsertGuildConfig(interaction.guildId!, { autoPostEnabled: false });
 

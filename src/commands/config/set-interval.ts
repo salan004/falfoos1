@@ -20,7 +20,7 @@ const intervalLabels: Record<string, string> = {
 
 export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
   try {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: ['Ephemeral'] });
 
     const interval = interaction.options.getString('الفاصل') as AutoPostInterval;
 

@@ -113,7 +113,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     const embed = new EmbedBuilder()
       .setColor(0xFF0000)
       .setDescription(t('error.permission'));
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed], flags: ['Ephemeral'] });
     return;
   }
 
@@ -157,13 +157,13 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     if (interaction.deferred) {
       await interaction.editReply({ embeds: [embed] });
     } else {
-      await interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.reply({ embeds: [embed], flags: ['Ephemeral'] });
     }
   }
 }
 
 async function handleSetChannel(interaction: ChatInputCommandInteraction): Promise<void> {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: ['Ephemeral'] });
 
   const channel = interaction.options.getChannel('channel') as TextChannel;
   if (!channel || !channel.isTextBased()) {
@@ -184,7 +184,7 @@ async function handleSetChannel(interaction: ChatInputCommandInteraction): Promi
 }
 
 async function handleSetInterval(interaction: ChatInputCommandInteraction): Promise<void> {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: ['Ephemeral'] });
 
   const interval = interaction.options.getString('الفاصل') as AutoPostInterval;
   if (!interval || !intervalLabels[interval]) {
@@ -212,7 +212,7 @@ async function handleSetInterval(interaction: ChatInputCommandInteraction): Prom
 }
 
 async function handleEnable(interaction: ChatInputCommandInteraction): Promise<void> {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: ['Ephemeral'] });
 
   const guildConfig = findGuildConfig(interaction.guildId!);
   if (!guildConfig || !guildConfig.channelId) {
@@ -239,7 +239,7 @@ async function handleEnable(interaction: ChatInputCommandInteraction): Promise<v
 }
 
 async function handleDisable(interaction: ChatInputCommandInteraction): Promise<void> {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: ['Ephemeral'] });
 
   upsertGuildConfig(interaction.guildId!, { autoPostEnabled: false });
 
@@ -253,7 +253,7 @@ async function handleDisable(interaction: ChatInputCommandInteraction): Promise<
 }
 
 async function handleSetCooldown(interaction: ChatInputCommandInteraction): Promise<void> {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: ['Ephemeral'] });
 
   const seconds = interaction.options.getInteger('الثواني', true);
 
@@ -267,7 +267,7 @@ async function handleSetCooldown(interaction: ChatInputCommandInteraction): Prom
 }
 
 async function handleShow(interaction: ChatInputCommandInteraction): Promise<void> {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: ['Ephemeral'] });
 
   const guildConfig = findGuildConfig(interaction.guildId!);
 
@@ -301,7 +301,7 @@ async function handleShow(interaction: ChatInputCommandInteraction): Promise<voi
 }
 
 async function handleSetAnnouncementChannel(interaction: ChatInputCommandInteraction): Promise<void> {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: ['Ephemeral'] });
 
   const channel = interaction.options.getChannel('القناة') as TextChannel;
   if (!channel || !channel.isTextBased()) {
@@ -322,7 +322,7 @@ async function handleSetAnnouncementChannel(interaction: ChatInputCommandInterac
 }
 
 async function handleSetMemeChannel(interaction: ChatInputCommandInteraction): Promise<void> {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: ['Ephemeral'] });
 
   const channel = interaction.options.getChannel('القناة') as TextChannel;
   if (!channel || !channel.isTextBased()) {
@@ -343,7 +343,7 @@ async function handleSetMemeChannel(interaction: ChatInputCommandInteraction): P
 }
 
 async function handleSetReviewChannel(interaction: ChatInputCommandInteraction): Promise<void> {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: ['Ephemeral'] });
 
   const channel = interaction.options.getChannel('القناة') as TextChannel;
   if (!channel || !channel.isTextBased()) {

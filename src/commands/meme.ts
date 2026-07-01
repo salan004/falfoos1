@@ -10,5 +10,5 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     .setColor(0xFFA500)
     .setDescription(t('meme.disabled'));
 
-  await interaction.reply({ embeds: [embed], ephemeral: true });
+  await interaction.reply({ embeds: [embed], flags: ['Ephemeral'] });
 }

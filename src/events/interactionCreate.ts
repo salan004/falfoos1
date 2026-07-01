@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { Events, Interaction, EmbedBuilder, PermissionFlagsBits } from 'discord.js';
 import { findCommunityVote, createCommunityVote, updateCommunityVote, getCommunityVoteStats, getCommunityMemesByCategory, getWeightedRandomMeme, addRecentMeme, getRecentMemeIds, approveSubmission, rejectSubmission, getPendingSubmissions, getApprovedCommunityMemes, getUserStats, isMemeExpired, finalizeMemeVoting } from '../data/store';
 import { logCommand, logError } from '../utils/logger';
@@ -24,7 +23,7 @@ export async function execute(interaction: Interaction): Promise<void> {
         const embed = new EmbedBuilder()
           .setColor(0xFF0000)
           .setDescription(t('error.command_not_found', { command: interaction.commandName }));
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: ['Ephemeral'] });
         return;
       }
 
@@ -53,7 +52,7 @@ export async function execute(interaction: Interaction): Promise<void> {
       if (interaction.deferred) {
         await interaction.editReply({ embeds: [embed] });
       } else {
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: ['Ephemeral'] });
       }
     }
   }
@@ -95,7 +94,7 @@ async function handleArenaVote(interaction: any): Promise<void> {
     const embed = new EmbedBuilder()
       .setColor(0xFFA500)
       .setDescription(t('vote.expired'));
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed], flags: ['Ephemeral'] });
 
     const stats = getCommunityVoteStats(memeId);
     const newExpiredRow = arenaVoteButtons(memeId, stats.funny, stats.legendary, stats.likes, true);
@@ -125,7 +124,7 @@ async function handleArenaVote(interaction: any): Promise<void> {
       const embed = new EmbedBuilder()
         .setColor(0xFFA500)
         .setDescription(t(key));
-      await interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.reply({ embeds: [embed], flags: ['Ephemeral'] });
       return;
     }
 
@@ -135,7 +134,7 @@ async function handleArenaVote(interaction: any): Promise<void> {
     const embed = new EmbedBuilder()
       .setColor(0x00FF00)
       .setDescription(t(key));
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed], flags: ['Ephemeral'] });
   } else {
     createCommunityVote(user.id, memeId, guildId, voteType);
 
@@ -143,7 +142,7 @@ async function handleArenaVote(interaction: any): Promise<void> {
     const embed = new EmbedBuilder()
       .setColor(0x00FF00)
       .setDescription(t(key));
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed], flags: ['Ephemeral'] });
   }
 
   const stats = getCommunityVoteStats(memeId);
@@ -182,7 +181,7 @@ async function handleSaveButton(interaction: any): Promise<void> {
     const embed = new EmbedBuilder()
       .setColor(0xFFA500)
       .setDescription(t('error.already_favorited'));
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed], flags: ['Ephemeral'] });
     return;
   }
 
@@ -199,7 +198,7 @@ async function handleSaveButton(interaction: any): Promise<void> {
   const embed = new EmbedBuilder()
     .setColor(0x00FF00)
     .setDescription(t('success.favorite_saved'));
-  await interaction.reply({ embeds: [embed], ephemeral: true });
+  await interaction.reply({ embeds: [embed], flags: ['Ephemeral'] });
   logCommand(user.id, 'save', guildId, { memeUrl });
 }
 
@@ -217,7 +216,7 @@ async function handleFavoriteButton(interaction: any): Promise<void> {
     const embed = new EmbedBuilder()
       .setColor(0xFFA500)
       .setDescription(t('error.already_favorited'));
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed], flags: ['Ephemeral'] });
     return;
   }
 
@@ -234,7 +233,7 @@ async function handleFavoriteButton(interaction: any): Promise<void> {
   const embed = new EmbedBuilder()
     .setColor(0x00FF00)
     .setDescription(t('success.favorite_saved'));
-  await interaction.reply({ embeds: [embed], ephemeral: true });
+  await interaction.reply({ embeds: [embed], flags: ['Ephemeral'] });
   logCommand(user.id, 'fav', guildId, { memeId });
 }
 
@@ -285,7 +284,7 @@ async function handleApprove(interaction: any): Promise<void> {
     const embed = new EmbedBuilder()
       .setColor(0xFF0000)
       .setDescription(t('error.not_moderator'));
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed], flags: ['Ephemeral'] });
     return;
   }
 
@@ -352,7 +351,7 @@ async function handleReject(interaction: any): Promise<void> {
     const embed = new EmbedBuilder()
       .setColor(0xFF0000)
       .setDescription(t('error.not_moderator'));
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed], flags: ['Ephemeral'] });
     return;
   }
 
@@ -398,7 +397,7 @@ async function handleDelete(interaction: any): Promise<void> {
     const embed = new EmbedBuilder()
       .setColor(0xFF0000)
       .setDescription(t('error.not_moderator'));
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed], flags: ['Ephemeral'] });
     return;
   }
 
@@ -481,68 +480,4 @@ async function handleSelectMenuInteraction(interaction: any): Promise<void> {
 
     await interaction.editReply({ embeds: [embed], components: interaction.message.components });
   }
-=======
-import { Events, ChatInputCommandInteraction, MessageFlags } from 'discord.js';
-import { client } from '../client';
-import { handleQuizCommand } from '../commands/quiz';
-import { handleLeaderboardCommand } from '../commands/leaderboard';
-import { handleProfileCommand } from '../commands/profile';
-import { handleRankCommand } from '../commands/rank';
-import { handleSkipCommand } from '../commands/skip';
-import { handleAddQuestion } from '../commands/admin/addQuestion';
-import { handleEditQuestion } from '../commands/admin/editQuestion';
-import { handleDeleteQuestion } from '../commands/admin/deleteQuestion';
-import { handleImportJson } from '../commands/admin/importJson';
-import { handleExportJson } from '../commands/admin/exportJson';
-import { handleSetupCommand, handleSettingsCommand } from '../commands/admin/setup';
-import { handleReloadCommand } from '../commands/admin/reload';
-import { handlePermissionsCommand } from '../commands/admin/permissions';
-
-export function registerInteractionEvent(): void {
-  client.on(Events.InteractionCreate, async (interaction) => {
-    try {
-      if (interaction.isChatInputCommand()) {
-        const commandMap: Record<string, (i: ChatInputCommandInteraction) => Promise<void>> = {
-          'مسابقة': handleQuizCommand,
-          'quiz': handleQuizCommand,
-          'المتصدرون': handleLeaderboardCommand,
-          'leaderboard': handleLeaderboardCommand,
-          'ملفي': handleProfileCommand,
-          'profile': handleProfileCommand,
-          'rank': handleRankCommand,
-          'skip': handleSkipCommand,
-          'إضافة_سؤال': handleAddQuestion,
-          'addquestion': handleAddQuestion,
-          'تعديل_سؤال': handleEditQuestion,
-          'editquestion': handleEditQuestion,
-          'حذف_سؤال': handleDeleteQuestion,
-          'removequestion': handleDeleteQuestion,
-          'استيراد': handleImportJson,
-          'import': handleImportJson,
-          'تصدير': handleExportJson,
-          'export': handleExportJson,
-          'setup': handleSetupCommand,
-          'settings': handleSettingsCommand,
-          'reload': handleReloadCommand,
-          'permissions': handlePermissionsCommand,
-        };
-
-        const handler = commandMap[interaction.commandName];
-        if (handler) {
-          await handler(interaction);
-        }
-      }
-    } catch (error) {
-      console.error('❌ Interaction handler error:', error);
-      if (interaction.isRepliable()) {
-        const errMsg = 'An unexpected error occurred. Please try again.';
-        if (interaction.replied || interaction.deferred) {
-          await interaction.editReply({ content: errMsg }).catch(() => {});
-        } else {
-          await interaction.reply({ content: errMsg, flags: MessageFlags.Ephemeral }).catch(() => {});
-        }
-      }
-    }
-  });
->>>>>>> 7a303d754a86e399d51568f3e72b09aa6c8bd1df
 }

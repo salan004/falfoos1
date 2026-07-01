@@ -59,7 +59,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     if (interaction.deferred) {
       await interaction.editReply({ embeds: [embed] });
     } else {
-      await interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.reply({ embeds: [embed], flags: ['Ephemeral'] });
     }
   }
 }

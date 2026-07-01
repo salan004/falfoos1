@@ -10,7 +10,7 @@ export const data = {
 
 export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
   try {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: ['Ephemeral'] });
 
     const channel = interaction.options.getChannel('القناة') as TextChannel;
 

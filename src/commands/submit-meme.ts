@@ -40,7 +40,7 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
   try {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: ['Ephemeral'] });
 
     const image = interaction.options.getAttachment('الصورة', true);
     const title = interaction.options.getString('العنوان') || '';
@@ -157,7 +157,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     if (interaction.deferred) {
       await interaction.editReply({ embeds: [embed] });
     } else {
-      await interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.reply({ embeds: [embed], flags: ['Ephemeral'] });
     }
   }
 }
