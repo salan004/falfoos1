@@ -1,0 +1,36 @@
+[
+  {
+    "id": "mr0trlrqcbkn7uub",
+    "authorId": "287261963170349077",
+    "imageUrl": "https://cdn.discordapp.com/ephemeral-attachments/1521543541720092876/1521543888530178218/fa09453a-ab40-45c7-8e3a-82099f3c92ea.png?ex=6a4537ab&is=6a43e62b&hm=ee5696a806699793982bfbd77447f889f95d84875e77511fcd83c73f0ffe2363&",
+    "title": "",
+    "category": "random",
+    "funny": 0,
+    "legendary": 0,
+    "likes": 0,
+    "score": 0,
+    "approved": true,
+    "voting": true,
+    "winner": false,
+    "placement": null,
+    "createdAt": "2026-06-30T15:52:25.320Z",
+    "expiresAt": "2026-07-01T15:52:25.320Z"
+  },
+  {
+    "id": "mr0tvaf4v90uc4yp",
+    "authorId": "287261963170349077",
+    "imageUrl": "https://cdn.discordapp.com/ephemeral-attachments/1521543541720092876/1521544601763315853/fa09453a-ab40-45c7-8e3a-82099f3c92ea.png?ex=6a453855&is=6a43e6d5&hm=6dfcc2cefe58348bdc8aa90bcb78e3aa102fa9ff9a2665331295c07396188349&",
+    "title": "",
+    "category": "random",
+    "funny": 0,
+    "legendary": 0,
+    "likes": 0,
+    "score": 0,
+    "approved": true,
+    "voting": true,
+    "winner": false,
+    "placement": null,
+    "createdAt": "2026-06-30T15:55:08.161Z",
+    "expiresAt": "2026-07-01T15:55:08.161Z"
+  }
+]
