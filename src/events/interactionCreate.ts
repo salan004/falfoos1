@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { Events, Interaction, EmbedBuilder, PermissionFlagsBits } from 'discord.js';
 import { findCommunityVote, createCommunityVote, updateCommunityVote, getCommunityVoteStats, getCommunityMemesByCategory, getWeightedRandomMeme, addRecentMeme, getRecentMemeIds, approveSubmission, rejectSubmission, getPendingSubmissions, getApprovedCommunityMemes, getUserStats, isMemeExpired, finalizeMemeVoting } from '../data/store';
 import { logCommand, logError } from '../utils/logger';
@@ -308,7 +309,7 @@ async function handleApprove(interaction: any): Promise<void> {
     .setColor(0x00FF00)
     .setTitle(t('ic.approved.title'))
     .setImage(meme.imageUrl)
-    .setDescription(meme.title)
+    .setDescription(meme.title || 'No description provided')
     .addFields(
       { name: t('ic.approved.author'), value: `<@${meme.authorId}>`, inline: true },
       { name: t('ic.approved.voting'), value: t('ic.approved.duration'), inline: true },
@@ -480,4 +481,68 @@ async function handleSelectMenuInteraction(interaction: any): Promise<void> {
 
     await interaction.editReply({ embeds: [embed], components: interaction.message.components });
   }
+=======
+import { Events, ChatInputCommandInteraction, MessageFlags } from 'discord.js';
+import { client } from '../client';
+import { handleQuizCommand } from '../commands/quiz';
+import { handleLeaderboardCommand } from '../commands/leaderboard';
+import { handleProfileCommand } from '../commands/profile';
+import { handleRankCommand } from '../commands/rank';
+import { handleSkipCommand } from '../commands/skip';
+import { handleAddQuestion } from '../commands/admin/addQuestion';
+import { handleEditQuestion } from '../commands/admin/editQuestion';
+import { handleDeleteQuestion } from '../commands/admin/deleteQuestion';
+import { handleImportJson } from '../commands/admin/importJson';
+import { handleExportJson } from '../commands/admin/exportJson';
+import { handleSetupCommand, handleSettingsCommand } from '../commands/admin/setup';
+import { handleReloadCommand } from '../commands/admin/reload';
+import { handlePermissionsCommand } from '../commands/admin/permissions';
+
+export function registerInteractionEvent(): void {
+  client.on(Events.InteractionCreate, async (interaction) => {
+    try {
+      if (interaction.isChatInputCommand()) {
+        const commandMap: Record<string, (i: ChatInputCommandInteraction) => Promise<void>> = {
+          'مسابقة': handleQuizCommand,
+          'quiz': handleQuizCommand,
+          'المتصدرون': handleLeaderboardCommand,
+          'leaderboard': handleLeaderboardCommand,
+          'ملفي': handleProfileCommand,
+          'profile': handleProfileCommand,
+          'rank': handleRankCommand,
+          'skip': handleSkipCommand,
+          'إضافة_سؤال': handleAddQuestion,
+          'addquestion': handleAddQuestion,
+          'تعديل_سؤال': handleEditQuestion,
+          'editquestion': handleEditQuestion,
+          'حذف_سؤال': handleDeleteQuestion,
+          'removequestion': handleDeleteQuestion,
+          'استيراد': handleImportJson,
+          'import': handleImportJson,
+          'تصدير': handleExportJson,
+          'export': handleExportJson,
+          'setup': handleSetupCommand,
+          'settings': handleSettingsCommand,
+          'reload': handleReloadCommand,
+          'permissions': handlePermissionsCommand,
+        };
+
+        const handler = commandMap[interaction.commandName];
+        if (handler) {
+          await handler(interaction);
+        }
+      }
+    } catch (error) {
+      console.error('❌ Interaction handler error:', error);
+      if (interaction.isRepliable()) {
+        const errMsg = 'An unexpected error occurred. Please try again.';
+        if (interaction.replied || interaction.deferred) {
+          await interaction.editReply({ content: errMsg }).catch(() => {});
+        } else {
+          await interaction.reply({ content: errMsg, flags: MessageFlags.Ephemeral }).catch(() => {});
+        }
+      }
+    }
+  });
+>>>>>>> 7a303d754a86e399d51568f3e72b09aa6c8bd1df
 }

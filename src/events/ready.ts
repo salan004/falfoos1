@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { Events, Client } from 'discord.js';
 import { t } from '../utils/i18n';
 import logger from '../utils/logger';
@@ -24,4 +25,14 @@ export async function execute(client: Client): Promise<void> {
   initAnnouncer(client);
   startAutoPoster(client);
   startVoteTimer(client);
+=======
+import { Events } from 'discord.js';
+import { client } from '../client';
+
+export function registerReadyEvent(): void {
+  client.once(Events.ClientReady, (readyClient) => {
+    console.log(`✅ البوت جاهز! تم تسجيل الدخول كـ ${readyClient.user.tag}`);
+    readyClient.user.setActivity('المسابقات الإسلامية | /مسابقة', { type: 0 });
+  });
+>>>>>>> 7a303d754a86e399d51568f3e72b09aa6c8bd1df
 }

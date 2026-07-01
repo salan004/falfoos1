@@ -1,7 +1,12 @@
 node_modules/
 dist/
+<<<<<<< HEAD
 .env
 logs/
 *.log
 .DS_Store
 Thumbs.db
+=======
+data/*.db
+.env
+>>>>>>> 7a303d754a86e399d51568f3e72b09aa6c8bd1df

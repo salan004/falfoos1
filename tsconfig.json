@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES2022",
+<<<<<<< HEAD
     "module": "commonjs",
+=======
+    "module": "CommonJS",
+>>>>>>> 7a303d754a86e399d51568f3e72b09aa6c8bd1df
     "lib": ["ES2022"],
     "outDir": "./dist",
     "rootDir": "./src",
@@ -12,6 +16,7 @@
     "resolveJsonModule": true,
     "declaration": true,
     "declarationMap": true,
+<<<<<<< HEAD
     "sourceMap": true,
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
@@ -22,4 +27,10 @@
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
+=======
+    "sourceMap": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "data", "scripts"]
+>>>>>>> 7a303d754a86e399d51568f3e72b09aa6c8bd1df
 }
