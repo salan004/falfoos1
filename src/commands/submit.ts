@@ -42,18 +42,14 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
   try {
     await interaction.deferReply({ flags: ['Ephemeral'] });
 
-    const image = interaction.options.getAttachment('الميم', true);
-    const title = interaction.options.getString('العنوان') || '';
-    const category = (interaction.options.getString('التصنيف') || 'random') as MemeCategory;
-
-    const hasAccess = memberHasAdminAccess(
+    const isAdmin = memberHasAdminAccess(
       interaction.member as GuildMember | null,
       interaction.memberPermissions,
       interaction.guild?.ownerId,
       interaction.user.id,
     );
-    console.log(`User ${interaction.user.id} isAdmin status: ${hasAccess}`);
-    if (!hasAccess) {
+    console.log(`Executing submit: User: ${interaction.user.id}, Is Admin/Owner: ${isAdmin}`);
+    if (!isAdmin) {
       const todayCount = getUserSubmissionCountToday(interaction.user.id);
       if (todayCount >= 3) {
         const embed = new EmbedBuilder()
@@ -63,6 +59,10 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         return;
       }
     }
+
+    const image = interaction.options.getAttachment('الميم', true);
+    const title = interaction.options.getString('العنوان') || '';
+    const category = (interaction.options.getString('التصنيف') || 'random') as MemeCategory;
 
     if (!image.contentType?.startsWith('image/')) {
       const embed = new EmbedBuilder()

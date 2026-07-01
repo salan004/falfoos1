@@ -14,7 +14,7 @@ export function memberHasAdminAccess(
   userId: string,
 ): boolean {
   if (userId === ownerId) return true;
-  if (permissions?.has(PermissionsBitField.Flags.Administrator)) return true;
+  if (permissions?.has('Administrator')) return true;
   if (member instanceof GuildMember && isAdmin(member)) return true;
   // When the member is not a cached GuildMember (APIInteractionGuildMember),
   // check roles from the raw API data for the custom admin role.
