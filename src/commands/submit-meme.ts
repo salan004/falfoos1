@@ -4,7 +4,7 @@ import { logCommand, logError } from '../utils/logger';
 import { t } from '../utils/i18n';
 import { reviewButtons, safeEmbed } from '../utils/embed';
 import { filterContent } from '../utils/contentFilter';
-import { isAdmin } from '../utils/permissions';
+import { memberHasAdminAccess } from '../utils/permissions';
 import { MemeCategory } from '../types';
 
 export const data = new SlashCommandBuilder()
@@ -71,8 +71,14 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       return;
     }
 
-    const member = interaction.member;
-    if (!(member instanceof GuildMember && isAdmin(member))) {
+    const hasAccess = memberHasAdminAccess(
+      interaction.member as GuildMember | null,
+      interaction.memberPermissions,
+      interaction.guild?.ownerId,
+      interaction.user.id,
+    );
+    console.log(`User ${interaction.user.id} isAdmin status: ${hasAccess}`);
+    if (!hasAccess) {
       const todayCount = getUserSubmissionCountToday(interaction.user.id);
       if (todayCount >= 3) {
         const embed = new EmbedBuilder()
