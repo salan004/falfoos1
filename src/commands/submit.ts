@@ -46,6 +46,24 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     const title = interaction.options.getString('العنوان') || '';
     const category = (interaction.options.getString('التصنيف') || 'random') as MemeCategory;
 
+    const hasAccess = memberHasAdminAccess(
+      interaction.member as GuildMember | null,
+      interaction.memberPermissions,
+      interaction.guild?.ownerId,
+      interaction.user.id,
+    );
+    console.log(`User ${interaction.user.id} isAdmin status: ${hasAccess}`);
+    if (!hasAccess) {
+      const todayCount = getUserSubmissionCountToday(interaction.user.id);
+      if (todayCount >= 3) {
+        const embed = new EmbedBuilder()
+          .setColor(0xFF0000)
+          .setDescription(t('error.submit_limit'));
+        await interaction.editReply({ embeds: [embed] });
+        return;
+      }
+    }
+
     if (!image.contentType?.startsWith('image/')) {
       const embed = new EmbedBuilder()
         .setColor(0xFF0000)
@@ -69,24 +87,6 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         .setDescription(t('error.submit_nsfw'));
       await interaction.editReply({ embeds: [embed] });
       return;
-    }
-
-    const hasAccess = memberHasAdminAccess(
-      interaction.member as GuildMember | null,
-      interaction.memberPermissions,
-      interaction.guild?.ownerId,
-      interaction.user.id,
-    );
-    console.log(`User ${interaction.user.id} isAdmin status: ${hasAccess}`);
-    if (!hasAccess) {
-      const todayCount = getUserSubmissionCountToday(interaction.user.id);
-      if (todayCount >= 3) {
-        const embed = new EmbedBuilder()
-          .setColor(0xFF0000)
-          .setDescription(t('error.submit_limit'));
-        await interaction.editReply({ embeds: [embed] });
-        return;
-      }
     }
 
     if (isDuplicateImage(image.url)) {

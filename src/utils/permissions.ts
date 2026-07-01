@@ -16,5 +16,11 @@ export function memberHasAdminAccess(
   if (userId === ownerId) return true;
   if (permissions?.has(PermissionsBitField.Flags.Administrator)) return true;
   if (member instanceof GuildMember && isAdmin(member)) return true;
+  // When the member is not a cached GuildMember (APIInteractionGuildMember),
+  // check roles from the raw API data for the custom admin role.
+  if (member && !(member instanceof GuildMember) && config.adminRoleId) {
+    const roles = (member as Record<string, unknown>).roles;
+    if (Array.isArray(roles) && roles.includes(config.adminRoleId)) return true;
+  }
   return false;
 }
