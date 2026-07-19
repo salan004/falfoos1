@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, TextChannel, GuildMember } from 'discord.js';
-import { addPendingSubmission, isDuplicateImage, getUserSubmissionCountToday, findGuildConfig, getUserStats } from '../data/store';
+import { addPendingSubmission, isDuplicateImage, getUserSubmissionCountToday, findGuildConfig, incrementUserSubmissions, updateUserProfile } from '../data/store';
 import { logCommand, logError } from '../utils/logger';
 import { t } from '../utils/i18n';
 import { reviewButtons, safeEmbed } from '../utils/embed';
@@ -124,6 +124,12 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       imageUrl: image.url,
       title,
       category,
+    });
+
+    incrementUserSubmissions(interaction.user.id);
+    updateUserProfile(interaction.user.id, {
+      username: interaction.user.username,
+      avatarUrl: interaction.user.displayAvatarURL(),
     });
 
     const embed = safeEmbed()

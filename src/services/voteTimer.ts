@@ -1,5 +1,5 @@
 import { Client, EmbedBuilder, AttachmentBuilder, TextChannel } from 'discord.js';
-import { getExpiredVotingMemes, getCommunityVoteStats, findGuildConfig, awardPlacements, getCommunityMemeById, checkSeasonRollover, checkAchievements, getLeaderboardByPoints, getWeeklyLeaderboard, resetWeeklyWins } from '../data/store';
+import { getExpiredVotingMemes, getCommunityVoteStats, findGuildConfig, awardPlacements, getCommunityMemeById, checkSeasonRollover, checkAchievements, getLeaderboardByPoints, getWeeklyLeaderboard, resetWeeklyWins, getActiveVotingMemes } from '../data/store';
 import { buildArenaMemeEmbed } from '../utils/embed';
 import { generateLeaderboardImage } from './leaderboardImage';
 import { t } from '../utils/i18n';
@@ -62,8 +62,7 @@ async function checkEndingSoon(): Promise<void> {
     const config = findGuildConfig(guild.id);
     if (!config?.memeChannelId) continue;
 
-    const { getExpiredVotingMemes } = require('../data/store');
-    const voting = require('../data/store').getActiveVotingMemes();
+    const voting = getActiveVotingMemes();
 
     for (const meme of voting) {
       if (!meme.expiresAt) continue;

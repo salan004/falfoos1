@@ -165,7 +165,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 async function handleSetChannel(interaction: ChatInputCommandInteraction): Promise<void> {
   await interaction.deferReply({ flags: ['Ephemeral'] });
 
-  const channel = interaction.options.getChannel('channel') as TextChannel;
+  const channel = interaction.options.getChannel('القناة') as TextChannel;
   if (!channel || !channel.isTextBased()) {
     const embed = new EmbedBuilder()
       .setColor(0xFF0000)

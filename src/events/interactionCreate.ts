@@ -1,10 +1,11 @@
 import { Events, Interaction, EmbedBuilder, PermissionFlagsBits } from 'discord.js';
-import { findCommunityVote, createCommunityVote, updateCommunityVote, getCommunityVoteStats, getCommunityMemesByCategory, getWeightedRandomMeme, addRecentMeme, getRecentMemeIds, approveSubmission, rejectSubmission, getPendingSubmissions, getApprovedCommunityMemes, getUserStats, isMemeExpired, finalizeMemeVoting } from '../data/store';
+import { findCommunityVote, createCommunityVote, updateCommunityVote, getCommunityVoteStats, getCommunityMemesByCategory, getWeightedRandomMeme, addRecentMeme, getRecentMemeIds, approveSubmission, rejectSubmission, getPendingSubmissions, getApprovedCommunityMemes, getUserStats, isMemeExpired, finalizeMemeVoting, findFavorite, createFavorite, findGuildConfig, getPendingSubmissionById } from '../data/store';
 import { logCommand, logError } from '../utils/logger';
 import { t } from '../utils/i18n';
 import { buildMemeEmbed, buildArenaMemeEmbed, arenaVoteButtons, reviewButtons, safeEmbed } from '../utils/embed';
 import { fetchMeme } from '../utils/memeApi';
 import { canPostNsfw } from '../utils/nsfw';
+import { getTopVotedMemes, getTopContributors, getMostActiveUsers } from '../services/leaderboardService';
 
 const VOTE_TYPE_MAP: Record<string, 'funny' | 'legendary' | 'like'> = {
   vote_funny: 'funny',
@@ -44,16 +45,24 @@ export async function execute(interaction: Interaction): Promise<void> {
       guild: interaction.guildId,
     });
 
-    const embed = new EmbedBuilder()
-      .setColor(0xFF0000)
-      .setDescription(t('error.unexpected'));
+    try {
+      const embed = new EmbedBuilder()
+        .setColor(0xFF0000)
+        .setDescription(t('error.unexpected'));
 
-    if (interaction.isRepliable()) {
-      if (interaction.deferred) {
-        await interaction.editReply({ embeds: [embed] });
-      } else {
-        await interaction.reply({ embeds: [embed], flags: ['Ephemeral'] });
+      if (interaction.isRepliable()) {
+        if (interaction.deferred) {
+          await interaction.editReply({ embeds: [embed] });
+        } else {
+          await interaction.reply({ embeds: [embed], flags: ['Ephemeral'] });
+        }
       }
+    } catch (innerError) {
+      logError('Failed to send error response', innerError, {
+        type: interaction.type,
+        user: interaction.user?.id,
+        guild: interaction.guildId,
+      });
     }
   }
 }
@@ -174,7 +183,6 @@ async function handleSaveButton(interaction: any): Promise<void> {
   const memeSource = message.embeds[0]?.footer?.text?.replace(/^Source:\s/, '')?.split('•')[0]?.trim() || 'unknown';
   const category = customId.split('_')[2] || 'random';
 
-  const { findFavorite, createFavorite } = require('../data/store');
   const existing = findFavorite(user.id, memeUrl);
 
   if (existing) {
@@ -209,7 +217,6 @@ async function handleFavoriteButton(interaction: any): Promise<void> {
   const memeImageUrl = message.embeds[0]?.image?.url || '';
   const memeUrl = memeImageUrl;
 
-  const { findFavorite, createFavorite } = require('../data/store');
   const existing = findFavorite(user.id, memeUrl);
 
   if (existing) {
@@ -301,7 +308,6 @@ async function handleApprove(interaction: any): Promise<void> {
     return;
   }
 
-  const { findGuildConfig } = require('../data/store');
   const guildConfig = findGuildConfig(interaction.guildId);
 
   const approvedEmbed = safeEmbed()
@@ -376,7 +382,6 @@ async function handleReject(interaction: any): Promise<void> {
   await interaction.editReply({ embeds: [rejectedEmbed], components: [] });
 
   try {
-    const { getPendingSubmissionById } = require('../data/store');
     const sub = getPendingSubmissionById(submissionId);
     if (sub) {
       const author = await interaction.client.users.fetch(sub.authorId);
@@ -404,7 +409,6 @@ async function handleDelete(interaction: any): Promise<void> {
   await interaction.deferUpdate();
 
   const submissionId = Buffer.from(interaction.customId.split('_')[1], 'base64').toString('utf-8');
-  const { rejectSubmission } = require('../data/store');
   rejectSubmission(submissionId);
 
   const deletedEmbed = safeEmbed()
@@ -420,8 +424,6 @@ async function handleSelectMenuInteraction(interaction: any): Promise<void> {
   if (interaction.customId === 'leaderboard_select') {
     await interaction.deferUpdate();
 
-    const { getTopVotedMemes, getTopContributors, getMostActiveUsers } = require('../services/leaderboardService');
-
     const value = interaction.values[0];
     let embed: EmbedBuilder;
 
@@ -434,7 +436,7 @@ async function handleSelectMenuInteraction(interaction: any): Promise<void> {
           .setDescription(
             topMemes.length > 0
               ? topMemes.map((m: any, i: number) =>
-                `**${i + 1}.** 👍 ${m.upvotes} | 👎 ${m.downvotes}\n➡️ الميم التالي`
+                `**${i + 1}.** 👍 ${m.upvotes} | 👎 ${m.downvotes}\n${m.memeUrl.slice(0, 60)}`
               ).join('\n\n')
               : t('empty.top_memes')
           )

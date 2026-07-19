@@ -23,4 +23,5 @@ export async function execute(client: Client): Promise<void> {
 
   initAnnouncer(client);
   startAutoPoster(client);
+  startVoteTimer(client);
 }

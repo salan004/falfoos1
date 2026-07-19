@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, AttachmentBuilder } from 'discord.js';
-import { getTopVotedMemes, getTopContributors, getMostActiveUsers } from '../services/leaderboardService';
 import { getLeaderboardByPoints, getTopCommunityMemes, getTopCreators, getSeasonalLeaderboard, getWeeklyLeaderboard, getHallOfFame, getActiveSeason } from '../data/store';
+import { getMostActiveUsers } from '../services/leaderboardService';
 import { generateLeaderboardImage } from '../services/leaderboardImage';
 import { logCommand, logError } from '../utils/logger';
 import { t } from '../utils/i18n';
