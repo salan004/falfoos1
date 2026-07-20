@@ -159,7 +159,8 @@ export class SafeEmbedBuilder {
   }
 
   setDescription(value: unknown, fallback?: string): this {
-    this.embed.setDescription(safeStringTrimmed(value, fallback, DISCORD_DESC_MAX));
+    const result = safeStringTrimmed(value, fallback, DISCORD_DESC_MAX);
+    this.embed.setDescription(result || null);
     return this;
   }
 
