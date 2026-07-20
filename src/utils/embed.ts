@@ -8,8 +8,12 @@ function sourceLabel(sourceType: string): string {
 }
 
 export function isVideoUrl(url: string): boolean {
-  const clean = url.split('?')[0].toLowerCase();
-  return clean.endsWith('.mp4') || clean.endsWith('.mov') || clean.endsWith('.webm');
+  try {
+    const pathname = new URL(url).pathname.toLowerCase();
+    return pathname.endsWith('.mp4') || pathname.endsWith('.mov') || pathname.endsWith('.webm');
+  } catch {
+    return false;
+  }
 }
 
 export function buildMemeEmbed(meme: MemeData, requesterName?: string): EmbedBuilder {
