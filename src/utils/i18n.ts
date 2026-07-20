@@ -217,7 +217,7 @@ const translations: Record<string, string> = {
   'error.no_arabic_memes':             'لا توجد ميمات عربية مناسبة حالياً.',
   'error.submit_limit':                '❌ يمكنك إرسال **3** ميمات فقط في اليوم.',
   'error.submit_duplicate':            '❌ هذه الصورة تم إرسالها بالفعل.',
-  'error.submit_invalid_type':         '❌ يُرجى رفع صورة أو GIF فقط. الفيديو غير مدعوم.',
+  'error.submit_invalid_type':         '❌ يُرجى رفع صورة أو GIF أو فيديو فقط.',
   'error.submit_too_large':            '❌ حجم الملف كبير جداً. الحد الأقصى هو 10 ميغابايت.',
   'error.submit_nsfw':                 '❌ هذه الصورة تحتوي على محتوى غير مناسب.',
   'error.submit_no_channel':           '❌ لم يتم العثور على قناة مراجعة. أنشئ قناة **#ميم-مراجعة** أو عيّن واحدة باستخدام `/config set-review-channel`.',

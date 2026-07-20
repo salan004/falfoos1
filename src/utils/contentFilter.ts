@@ -34,7 +34,7 @@ const BLOCKED_IMAGE_DOMAINS = [
   'onlyfans.com', 'erome.com', 'imgur.com/gallery/', 'imgur.com/a/',
 ];
 
-const ALLOWED_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
+const ALLOWED_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.mp4', '.mov', '.webm'];
 
 function containsBlockedWord(text: string, blockedWords: string[]): string | null {
   const lower = text.toLowerCase();

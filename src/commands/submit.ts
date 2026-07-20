@@ -13,7 +13,7 @@ export const data = new SlashCommandBuilder()
   .addAttachmentOption(option =>
     option
       .setName('الميم')
-      .setDescription('ارفع صورة/GIF الميم')
+      .setDescription('ارفع صورة/GIF/فيديو الميم')
       .setRequired(true)
   )
   .addStringOption(option =>
@@ -65,7 +65,8 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     const title = interaction.options.getString('العنوان') || '';
     const category = (interaction.options.getString('التصنيف') || 'random') as MemeCategory;
 
-    if (image.contentType && !image.contentType.startsWith('image/')) {
+    const isVideo = image.contentType?.startsWith('video/');
+    if (image.contentType && !image.contentType.startsWith('image/') && !isVideo) {
       const embed = new EmbedBuilder()
         .setColor(0xFF0000)
         .setDescription(t('error.submit_invalid_type'));
@@ -73,7 +74,8 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       return;
     }
 
-    if (image.size > 10 * 1024 * 1024) {
+    const maxSize = isVideo ? 25 * 1024 * 1024 : 10 * 1024 * 1024;
+    if (image.size > maxSize) {
       const embed = new EmbedBuilder()
         .setColor(0xFF0000)
         .setDescription(t('error.submit_too_large'));
