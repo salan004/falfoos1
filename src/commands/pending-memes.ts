@@ -1,4 +1,5 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, PermissionFlagsBits, AttachmentBuilder } from 'discord.js';
+import fetch from 'node-fetch';
 import { getPendingSubmissions } from '../data/store';
 import { logCommand, logError } from '../utils/logger';
 import { t } from '../utils/i18n';
@@ -47,7 +48,9 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     const buttons = reviewButtons(latest.id);
     const replyOptions: { embeds: any[]; components: any[]; files?: any[] } = { embeds: [embed.build()], components: [buttons] };
     if (video) {
-      replyOptions.files = [new AttachmentBuilder(latest.imageUrl, { name: 'video.mp4' })];
+      const vidResponse = await fetch(latest.imageUrl);
+      const vidBuffer = Buffer.from(await vidResponse.arrayBuffer());
+      replyOptions.files = [new AttachmentBuilder(vidBuffer, { name: 'video.mp4' })];
     }
     await interaction.editReply(replyOptions);
     logCommand(interaction.user.id, 'pending-memes', interaction.guildId!, { count: pending.length });

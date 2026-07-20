@@ -1,4 +1,5 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, AttachmentBuilder } from 'discord.js';
+import fetch from 'node-fetch';
 import { getTopVotingMemes, getCommunityVoteStats } from '../data/store';
 import { buildArenaMemeEmbed, arenaVoteButtons, buildArenaHeaderEmbed, isVideoUrl } from '../utils/embed';
 import { checkCooldown } from '../utils/cooldown';
@@ -38,9 +39,14 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       const stats = getCommunityVoteStats(m.id);
       return arenaVoteButtons(m.id, stats.funny, stats.legendary, stats.likes, !m.voting);
     });
-    const videoFiles = topMemes
-      .filter(m => isVideoUrl(m.imageUrl))
-      .map((m, i) => new AttachmentBuilder(m.imageUrl, { name: `video_${i}.mp4` }));
+    const videoMemes = topMemes.filter(m => isVideoUrl(m.imageUrl));
+    const videoFiles = videoMemes.length > 0
+      ? await Promise.all(videoMemes.map(async (m, i) => {
+          const vidResponse = await fetch(m.imageUrl);
+          const vidBuffer = Buffer.from(await vidResponse.arrayBuffer());
+          return new AttachmentBuilder(vidBuffer, { name: `video_${i}.mp4` });
+        }))
+      : [];
 
     await interaction.editReply({ embeds, components, files: videoFiles.length > 0 ? videoFiles : undefined });
     logCommand(interaction.user.id, 'arena', interaction.guildId!, { count: topMemes.length, topScores: topMemes.map(m => m.score) });

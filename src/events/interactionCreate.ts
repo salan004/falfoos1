@@ -1,4 +1,5 @@
 import { Events, Interaction, EmbedBuilder, PermissionFlagsBits, AttachmentBuilder } from 'discord.js';
+import fetch from 'node-fetch';
 import { findCommunityVote, createCommunityVote, updateCommunityVote, getCommunityVoteStats, getCommunityMemesByCategory, getWeightedRandomMeme, addRecentMeme, getRecentMemeIds, approveSubmission, rejectSubmission, getPendingSubmissions, getApprovedCommunityMemes, getUserStats, isMemeExpired, finalizeMemeVoting, findFavorite, createFavorite, findGuildConfig, getPendingSubmissionById } from '../data/store';
 import { logCommand, logError } from '../utils/logger';
 import { t } from '../utils/i18n';
@@ -285,7 +286,9 @@ async function handleNextCommunityMeme(interaction: any): Promise<void> {
   const buttons = arenaVoteButtons(meme.id, stats.funny, stats.legendary, stats.likes, !meme.voting);
   const replyOptions: { embeds: any[]; components: any[]; files?: any[] } = { embeds: [embed], components: [buttons] };
   if (isVideoUrl(meme.imageUrl)) {
-    replyOptions.files = [new AttachmentBuilder(meme.imageUrl, { name: 'video.mp4' })];
+    const vidResponse = await fetch(meme.imageUrl);
+    const vidBuffer = Buffer.from(await vidResponse.arrayBuffer());
+    replyOptions.files = [new AttachmentBuilder(vidBuffer, { name: 'video.mp4' })];
   }
   await interaction.editReply(replyOptions);
 }
@@ -331,7 +334,9 @@ async function handleApprove(interaction: any): Promise<void> {
   }
   const approveOptions: { embeds: any[]; components: any[]; files?: any[] } = { embeds: [approvedEmbed], components: [] };
   if (isVideoUrl(meme.imageUrl)) {
-    approveOptions.files = [new AttachmentBuilder(meme.imageUrl, { name: 'video.mp4' })];
+    const vidResponse = await fetch(meme.imageUrl);
+    const vidBuffer = Buffer.from(await vidResponse.arrayBuffer());
+    approveOptions.files = [new AttachmentBuilder(vidBuffer, { name: 'video.mp4' })];
   }
   await interaction.editReply(approveOptions);
 
@@ -343,7 +348,9 @@ async function handleApprove(interaction: any): Promise<void> {
         const voteButtons = arenaVoteButtons(meme.id, 0, 0, 0, false);
         const arenaOptions: { embeds: any[]; components: any[]; files?: any[] } = { embeds: [arenaEmbed], components: [voteButtons] };
         if (isVideoUrl(meme.imageUrl)) {
-          arenaOptions.files = [new AttachmentBuilder(meme.imageUrl, { name: 'video.mp4' })];
+          const vidResponse = await fetch(meme.imageUrl);
+          const vidBuffer = Buffer.from(await vidResponse.arrayBuffer());
+          arenaOptions.files = [new AttachmentBuilder(vidBuffer, { name: 'video.mp4' })];
         }
         await memeChannel.send(arenaOptions);
       }
@@ -364,7 +371,9 @@ async function handleApprove(interaction: any): Promise<void> {
     }
     const dmOptions: { embeds: any[]; files?: any[] } = { embeds: [dmEmbed] };
     if (isVideoUrl(meme.imageUrl)) {
-      dmOptions.files = [new AttachmentBuilder(meme.imageUrl, { name: 'video.mp4' })];
+      const vidResponse = await fetch(meme.imageUrl);
+      const vidBuffer = Buffer.from(await vidResponse.arrayBuffer());
+      dmOptions.files = [new AttachmentBuilder(vidBuffer, { name: 'video.mp4' })];
     }
     await author.send(dmOptions).catch(() => {});
   } catch { }

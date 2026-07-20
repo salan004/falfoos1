@@ -123,19 +123,9 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       return;
     }
 
-    const response = await fetch(image.url);
-    const buffer = Buffer.from(await response.arrayBuffer());
-    const fileExt = isVideo ? 'mp4' : 'png';
-    const fileName = `meme_${Date.now()}.${fileExt}`;
-
-    const tempAttachment = new AttachmentBuilder(buffer, { name: fileName });
-    const tempMsg = await reviewChannel.send({ files: [tempAttachment] });
-    const permanentUrl = tempMsg.attachments.first()!.url;
-    await tempMsg.delete().catch(() => {});
-
     const submission = addPendingSubmission({
       authorId: interaction.user.id,
-      imageUrl: permanentUrl,
+      imageUrl: image.url,
       title,
       category,
     });
@@ -145,6 +135,11 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       username: interaction.user.username,
       avatarUrl: interaction.user.displayAvatarURL(),
     });
+
+    const response = await fetch(image.url);
+    const buffer = Buffer.from(await response.arrayBuffer());
+    const fileExt = isVideo ? 'mp4' : 'png';
+    const fileName = `meme_${Date.now()}.${fileExt}`;
 
     const embed = safeEmbed()
       .setColor(0xF1C40F)
@@ -157,19 +152,25 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       .setFooter(t('footer.submitted', { user: interaction.user.tag, date: new Date().toLocaleDateString('ar-SA') }))
       .setTimestamp();
 
-    if (!isVideo) {
-      embed.setImage(permanentUrl);
-    }
     if (title) {
       embed.setDescription(`**${title}**`);
     }
 
     const buttons = reviewButtons(submission.id);
-    const sendOptions: { embeds: any[]; components: any[]; files?: any[] } = { embeds: [embed.build()], components: [buttons] };
-    if (isVideo) {
-      sendOptions.files = [new AttachmentBuilder(buffer, { name: fileName })];
+    const fileAttachment = new AttachmentBuilder(buffer, { name: fileName });
+    const reviewMsg = await reviewChannel.send({
+      embeds: [embed.build()],
+      components: [buttons],
+      files: [fileAttachment],
+    });
+
+    const permanentUrl = reviewMsg.attachments.first()!.url;
+    updatePendingSubmissionUrl(submission.id, permanentUrl);
+
+    if (!isVideo) {
+      embed.setImage(permanentUrl);
+      await reviewMsg.edit({ embeds: [embed.build()], components: [buttons] });
     }
-    await reviewChannel.send(sendOptions);
 
     const successEmbed = safeEmbed()
       .setColor(0x00FF00)
