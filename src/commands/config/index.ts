@@ -121,25 +121,25 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
   try {
     switch (subcommand) {
-      case 'set-channel':
+      case t('cmd.config.sub.set-channel.name'):
         await handleSetChannel(interaction);
         break;
-      case 'set-interval':
+      case t('cmd.config.sub.set-interval.name'):
         await handleSetInterval(interaction);
         break;
-      case 'enable':
+      case t('cmd.config.sub.enable.name'):
         await handleEnable(interaction);
         break;
-      case 'disable':
+      case t('cmd.config.sub.disable.name'):
         await handleDisable(interaction);
         break;
-      case 'set-cooldown':
+      case t('cmd.config.sub.set-cooldown.name'):
         await handleSetCooldown(interaction);
         break;
-      case 'show':
+      case t('cmd.config.sub.show.name'):
         await handleShow(interaction);
         break;
-      case 'set-review-channel':
+      case t('cmd.config.sub.set-review-channel.name'):
         await handleSetReviewChannel(interaction);
         break;
       case 'تعيين-قناة-الميم':
