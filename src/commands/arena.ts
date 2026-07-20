@@ -1,7 +1,7 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, AttachmentBuilder } from 'discord.js';
 import fetch from 'node-fetch';
 import { getTopVotingMemes, getCommunityVoteStats } from '../data/store';
-import { buildArenaMemeEmbed, arenaVoteButtons, buildArenaHeaderEmbed, isVideoUrl } from '../utils/embed';
+import { buildArenaMemeEmbed, arenaVoteButtons, buildArenaHeaderEmbed, isVideoUrl, getExtension } from '../utils/embed';
 import { checkCooldown } from '../utils/cooldown';
 import { logCommand } from '../utils/logger';
 import { t } from '../utils/i18n';
@@ -44,7 +44,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       ? await Promise.all(videoMemes.map(async (m, i) => {
           const vidResponse = await fetch(m.imageUrl);
           const vidBuffer = Buffer.from(await vidResponse.arrayBuffer());
-          return new AttachmentBuilder(vidBuffer, { name: `video_${i}.mp4` });
+          return new AttachmentBuilder(vidBuffer, { name: `video_${i}.${getExtension(m.imageUrl)}` });
         }))
       : [];
 

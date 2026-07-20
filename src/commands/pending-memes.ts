@@ -3,7 +3,7 @@ import fetch from 'node-fetch';
 import { getPendingSubmissions } from '../data/store';
 import { logCommand, logError } from '../utils/logger';
 import { t } from '../utils/i18n';
-import { reviewButtons, safeEmbed, isVideoUrl } from '../utils/embed';
+import { reviewButtons, safeEmbed, isVideoUrl, getExtension } from '../utils/embed';
 
 export const data = new SlashCommandBuilder()
   .setName('الميمات-قيد-المراجعة')
@@ -50,7 +50,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     if (video) {
       const vidResponse = await fetch(latest.imageUrl);
       const vidBuffer = Buffer.from(await vidResponse.arrayBuffer());
-      replyOptions.files = [new AttachmentBuilder(vidBuffer, { name: 'video.mp4' })];
+      replyOptions.files = [new AttachmentBuilder(vidBuffer, { name: `video.${getExtension(latest.imageUrl)}` })];
     }
     await interaction.editReply(replyOptions);
     logCommand(interaction.user.id, 'pending-memes', interaction.guildId!, { count: pending.length });

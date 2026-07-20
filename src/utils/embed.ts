@@ -16,6 +16,18 @@ export function isVideoUrl(url: string): boolean {
   }
 }
 
+export function getExtension(url: string): string {
+  try {
+    const pathname = new URL(url).pathname;
+    const parts = pathname.split('.');
+    if (parts.length > 1) {
+      const ext = parts[parts.length - 1].toLowerCase();
+      if (['mp4', 'mov', 'webm', 'png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext)) return ext;
+    }
+  } catch { }
+  return 'mp4';
+}
+
 export function buildMemeEmbed(meme: MemeData, requesterName?: string): EmbedBuilder {
   const categoryEmojis: Record<string, string> = { arabic: '🌍', gaming: '🎮', discord: '💬', school: '📚', internet: '🌐', random: '🎲' };
   const emoji = categoryEmojis[meme.category] || '🎭';
@@ -42,7 +54,9 @@ export function buildArenaMemeEmbed(meme: CommunityMeme): EmbedBuilder {
       { name: '📅', value: new Date(meme.createdAt).toLocaleDateString('ar-SA'), inline: true },
     )
     .setFooter({ text: `${t('footer.community')} • 🆔 ${meme.id.slice(0, 8)}` }).setTimestamp();
-  embed.setImage(meme.imageUrl);
+  if (!isVideoUrl(meme.imageUrl)) {
+    embed.setImage(meme.imageUrl);
+  }
   if (meme.voting && meme.expiresAt) {
     const remaining = new Date(meme.expiresAt).getTime() - Date.now();
     if (remaining > 0) {
@@ -66,7 +80,9 @@ export function buildWinnerEmbed(meme: CommunityMeme, placement: number): EmbedB
       { name: '📊', value: t('winner.stats', { funny: stats.funny, legendary: stats.legendary, likes: stats.likes, score: stats.score }), inline: true },
       { name: '🎁', value: placement === 1 ? t('common.point') : t('common.honorable_mention'), inline: true },
     ).setTimestamp();
-  embed.setImage(meme.imageUrl);
+  if (!isVideoUrl(meme.imageUrl)) {
+    embed.setImage(meme.imageUrl);
+  }
   return embed;
 }
 

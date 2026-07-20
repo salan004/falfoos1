@@ -3,7 +3,7 @@ import fetch from 'node-fetch';
 import { findCommunityVote, createCommunityVote, updateCommunityVote, getCommunityVoteStats, getCommunityMemesByCategory, getWeightedRandomMeme, addRecentMeme, getRecentMemeIds, approveSubmission, rejectSubmission, getPendingSubmissions, getApprovedCommunityMemes, getUserStats, isMemeExpired, finalizeMemeVoting, findFavorite, createFavorite, findGuildConfig, getPendingSubmissionById } from '../data/store';
 import { logCommand, logError } from '../utils/logger';
 import { t } from '../utils/i18n';
-import { buildMemeEmbed, buildArenaMemeEmbed, arenaVoteButtons, reviewButtons, safeEmbed, isVideoUrl } from '../utils/embed';
+import { buildMemeEmbed, buildArenaMemeEmbed, arenaVoteButtons, reviewButtons, safeEmbed, isVideoUrl, getExtension } from '../utils/embed';
 import { fetchMeme } from '../utils/memeApi';
 import { canPostNsfw } from '../utils/nsfw';
 import { getTopVotedMemes, getTopContributors, getMostActiveUsers } from '../services/leaderboardService';
@@ -288,7 +288,7 @@ async function handleNextCommunityMeme(interaction: any): Promise<void> {
   if (isVideoUrl(meme.imageUrl)) {
     const vidResponse = await fetch(meme.imageUrl);
     const vidBuffer = Buffer.from(await vidResponse.arrayBuffer());
-    replyOptions.files = [new AttachmentBuilder(vidBuffer, { name: 'video.mp4' })];
+    replyOptions.files = [new AttachmentBuilder(vidBuffer, { name: `video.${getExtension(meme.imageUrl)}` })];
   }
   await interaction.editReply(replyOptions);
 }
@@ -329,12 +329,14 @@ async function handleApprove(interaction: any): Promise<void> {
     .setTimestamp()
     .build();
 
-  approvedEmbed.setImage(meme.imageUrl);
+  if (!isVideoUrl(meme.imageUrl)) {
+    approvedEmbed.setImage(meme.imageUrl);
+  }
   const approveOptions: { embeds: any[]; components: any[]; files?: any[] } = { embeds: [approvedEmbed], components: [] };
   if (isVideoUrl(meme.imageUrl)) {
     const vidResponse = await fetch(meme.imageUrl);
     const vidBuffer = Buffer.from(await vidResponse.arrayBuffer());
-    approveOptions.files = [new AttachmentBuilder(vidBuffer, { name: 'video.mp4' })];
+    approveOptions.files = [new AttachmentBuilder(vidBuffer, { name: `video.${getExtension(meme.imageUrl)}` })];
   }
   await interaction.editReply(approveOptions);
 
@@ -348,7 +350,7 @@ async function handleApprove(interaction: any): Promise<void> {
         if (isVideoUrl(meme.imageUrl)) {
           const vidResponse = await fetch(meme.imageUrl);
           const vidBuffer = Buffer.from(await vidResponse.arrayBuffer());
-          arenaOptions.files = [new AttachmentBuilder(vidBuffer, { name: 'video.mp4' })];
+          arenaOptions.files = [new AttachmentBuilder(vidBuffer, { name: `video.${getExtension(meme.imageUrl)}` })];
         }
         await memeChannel.send(arenaOptions);
       }
@@ -364,12 +366,14 @@ async function handleApprove(interaction: any): Promise<void> {
       .setTitle(t('ic.dm_approved.title'))
       .setDescription(t('ic.dm_approved.desc'))
       .build();
-    dmEmbed.setImage(meme.imageUrl);
+    if (!isVideoUrl(meme.imageUrl)) {
+      dmEmbed.setImage(meme.imageUrl);
+    }
     const dmOptions: { embeds: any[]; files?: any[] } = { embeds: [dmEmbed] };
     if (isVideoUrl(meme.imageUrl)) {
       const vidResponse = await fetch(meme.imageUrl);
       const vidBuffer = Buffer.from(await vidResponse.arrayBuffer());
-      dmOptions.files = [new AttachmentBuilder(vidBuffer, { name: 'video.mp4' })];
+      dmOptions.files = [new AttachmentBuilder(vidBuffer, { name: `video.${getExtension(meme.imageUrl)}` })];
     }
     await author.send(dmOptions).catch(() => {});
   } catch { }

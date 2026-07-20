@@ -138,7 +138,10 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
     const response = await fetch(image.url);
     const buffer = Buffer.from(await response.arrayBuffer());
-    const fileExt = isVideo ? 'mp4' : 'png';
+    const originalName = image.name || '';
+    const dotIndex = originalName.lastIndexOf('.');
+    const originalExt = dotIndex >= 0 ? originalName.slice(dotIndex + 1).toLowerCase() : '';
+    const fileExt = originalExt || (isVideo ? 'mp4' : 'png');
     const fileName = `meme_${Date.now()}.${fileExt}`;
 
     const embed = safeEmbed()
@@ -169,7 +172,9 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     const permanentUrl = reviewMsg.attachments.first()!.url;
     updatePendingSubmissionUrl(submission.id, permanentUrl);
 
-    embed.setImage(permanentUrl);
+    if (!isVideo) {
+      embed.setImage(permanentUrl);
+    }
     await reviewMsg.edit({ embeds: [embed.build()], components: [buttons] });
 
     const successEmbed = safeEmbed()
