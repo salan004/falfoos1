@@ -329,9 +329,7 @@ async function handleApprove(interaction: any): Promise<void> {
     .setTimestamp()
     .build();
 
-  if (!isVideoUrl(meme.imageUrl)) {
-    approvedEmbed.setImage(meme.imageUrl);
-  }
+  approvedEmbed.setImage(meme.imageUrl);
   const approveOptions: { embeds: any[]; components: any[]; files?: any[] } = { embeds: [approvedEmbed], components: [] };
   if (isVideoUrl(meme.imageUrl)) {
     const vidResponse = await fetch(meme.imageUrl);
@@ -366,9 +364,7 @@ async function handleApprove(interaction: any): Promise<void> {
       .setTitle(t('ic.dm_approved.title'))
       .setDescription(t('ic.dm_approved.desc'))
       .build();
-    if (!isVideoUrl(meme.imageUrl)) {
-      dmEmbed.setImage(meme.imageUrl);
-    }
+    dmEmbed.setImage(meme.imageUrl);
     const dmOptions: { embeds: any[]; files?: any[] } = { embeds: [dmEmbed] };
     if (isVideoUrl(meme.imageUrl)) {
       const vidResponse = await fetch(meme.imageUrl);

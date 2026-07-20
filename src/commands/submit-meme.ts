@@ -167,10 +167,8 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     const permanentUrl = reviewMsg.attachments.first()!.url;
     updatePendingSubmissionUrl(submission.id, permanentUrl);
 
-    if (!isVideo) {
-      embed.setImage(permanentUrl);
-      await reviewMsg.edit({ embeds: [embed.build()], components: [buttons] });
-    }
+    embed.setImage(permanentUrl);
+    await reviewMsg.edit({ embeds: [embed.build()], components: [buttons] });
 
     const successEmbed = safeEmbed()
       .setColor(0x00FF00)
