@@ -94,14 +94,14 @@ function loadVotes(): void {
         votes.set(voteKey(record.userId, record.memeUrl, record.guildId), record);
       }
     }
-  } catch { }
+  } catch (err) { logger.error('Failed to load votes', err); }
 }
 
 function saveVotes(): void {
   try {
     ensureDataDir();
     fs.writeFileSync(path.join(DATA_DIR, 'votes.json'), JSON.stringify(Array.from(votes.values()), null, 2), 'utf-8');
-  } catch { }
+  } catch (err) { logger.error('Failed to save votes', err); }
 }
 
 function loadFavorites(): void {
@@ -113,14 +113,14 @@ function loadFavorites(): void {
         favorites.set(favoriteKey(record.userId, record.memeUrl), record);
       }
     }
-  } catch { }
+  } catch (err) { logger.error('Failed to load favorites', err); }
 }
 
 function saveFavorites(): void {
   try {
     ensureDataDir();
     fs.writeFileSync(path.join(DATA_DIR, 'favorites.json'), JSON.stringify(Array.from(favorites.values()), null, 2), 'utf-8');
-  } catch { }
+  } catch (err) { logger.error('Failed to save favorites', err); }
 }
 
 function loadGuildConfigs(): void {
@@ -136,7 +136,7 @@ function loadGuildConfigs(): void {
         guildConfigs.set(record.guildId, config);
       }
     }
-  } catch { }
+  } catch (err) { logger.error('Failed to load guild configs', err); }
 }
 
 function saveGuildConfigs(): void {
@@ -144,7 +144,7 @@ function saveGuildConfigs(): void {
     ensureDataDir();
     const data = Array.from(guildConfigs.values()).map(c => ({ ...c, lastAutoPost: c.lastAutoPost ? c.lastAutoPost.toISOString() : null }));
     fs.writeFileSync(path.join(DATA_DIR, 'guildConfigs.json'), JSON.stringify(data, null, 2), 'utf-8');
-  } catch { }
+  } catch (err) { logger.error('Failed to save guild configs', err); }
 }
 
 function loadApprovedCache(): void {
@@ -161,7 +161,7 @@ function loadApprovedCache(): void {
         approvedCache.get(cat)!.push(m);
       }
     }
-  } catch { }
+  } catch (err) { logger.error('Failed to load approved cache', err); }
 }
 
 function saveApprovedCache(): void {
@@ -174,7 +174,7 @@ function saveApprovedCache(): void {
       .filter((m): m is NonNullable<typeof m> => m !== null)
       .map(m => m as unknown as CachedMeme);
     fs.writeFileSync(path.join(DATA_DIR, 'approved-cache.json'), JSON.stringify(valid.slice(-500), null, 2), 'utf-8');
-  } catch { }
+  } catch (err) { logger.error('Failed to save approved cache', err); }
 }
 
 function loadCommunityMemes(): void {
@@ -186,7 +186,7 @@ function loadCommunityMemes(): void {
       for (const w of result.warnings) logger.warn(w);
       communityMemes = result.clean;
     }
-  } catch { }
+  } catch (err) { logger.error('Failed to load community memes', err); }
 }
 
 function saveCommunityMemes(): void {
@@ -196,7 +196,7 @@ function saveCommunityMemes(): void {
       .map(m => validateCommunityMeme(m))
       .filter((m): m is CommunityMeme => m !== null);
     fs.writeFileSync(path.join(DATA_DIR, 'memes.json'), JSON.stringify(communityMemes, null, 2), 'utf-8');
-  } catch { }
+  } catch (err) { logger.error('Failed to save community memes', err); }
 }
 
 function loadPendingSubmissions(): void {
@@ -208,7 +208,7 @@ function loadPendingSubmissions(): void {
       for (const w of result.warnings) logger.warn(w);
       pendingSubmissions = result.clean;
     }
-  } catch { }
+  } catch (err) { logger.error('Failed to load pending submissions', err); }
 }
 
 function savePendingSubmissions(): void {
@@ -218,7 +218,7 @@ function savePendingSubmissions(): void {
       .map(s => validatePendingSubmission(s))
       .filter((s): s is PendingSubmission => s !== null);
     fs.writeFileSync(path.join(DATA_DIR, 'pending-memes.json'), JSON.stringify(pendingSubmissions, null, 2), 'utf-8');
-  } catch { }
+  } catch (err) { logger.error('Failed to save pending submissions', err); }
 }
 
 function loadUserProfiles(): void {
@@ -227,14 +227,14 @@ function loadUserProfiles(): void {
     if (fs.existsSync(filePath)) {
       userProfiles = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
     }
-  } catch { }
+  } catch (err) { logger.error('Failed to load user profiles', err); }
 }
 
 function saveUserProfiles(): void {
   try {
     ensureDataDir();
     fs.writeFileSync(path.join(DATA_DIR, 'user-profiles.json'), JSON.stringify(userProfiles, null, 2), 'utf-8');
-  } catch { }
+  } catch (err) { logger.error('Failed to save user profiles', err); }
 }
 
 function loadSeasons(): void {
@@ -243,14 +243,14 @@ function loadSeasons(): void {
     if (fs.existsSync(filePath)) {
       seasons = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
     }
-  } catch { }
+  } catch (err) { logger.error('Failed to load seasons', err); }
 }
 
 function saveSeasons(): void {
   try {
     ensureDataDir();
     fs.writeFileSync(path.join(DATA_DIR, 'seasons.json'), JSON.stringify(seasons, null, 2), 'utf-8');
-  } catch { }
+  } catch (err) { logger.error('Failed to save seasons', err); }
 }
 
 function loadHallOfFame(): void {
@@ -259,14 +259,14 @@ function loadHallOfFame(): void {
     if (fs.existsSync(filePath)) {
       hallOfFame = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
     }
-  } catch { }
+  } catch (err) { logger.error('Failed to load hall of fame', err); }
 }
 
 function saveHallOfFame(): void {
   try {
     ensureDataDir();
     fs.writeFileSync(path.join(DATA_DIR, 'hall-of-fame.json'), JSON.stringify(hallOfFame, null, 2), 'utf-8');
-  } catch { }
+  } catch (err) { logger.error('Failed to save hall of fame', err); }
 }
 
 function loadWinningRounds(): void {
@@ -275,14 +275,14 @@ function loadWinningRounds(): void {
     if (fs.existsSync(filePath)) {
       winningRounds = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
     }
-  } catch { }
+  } catch (err) { logger.error('Failed to load winning rounds', err); }
 }
 
 function saveWinningRounds(): void {
   try {
     ensureDataDir();
     fs.writeFileSync(path.join(DATA_DIR, 'winning-rounds.json'), JSON.stringify(winningRounds, null, 2), 'utf-8');
-  } catch { }
+  } catch (err) { logger.error('Failed to save winning rounds', err); }
 }
 
 function loadRecentMemes(): void {
@@ -295,7 +295,7 @@ function loadRecentMemes(): void {
       }
       if (data.globalRecent) globalRecentMemes = data.globalRecent;
     }
-  } catch { }
+  } catch (err) { logger.error('Failed to load recent memes', err); }
 }
 
 function saveRecentMemes(): void {
@@ -304,7 +304,7 @@ function saveRecentMemes(): void {
     const guildRecent: Record<string, string[]> = {};
     for (const [guildId, ids] of guildRecentMemes) guildRecent[guildId] = ids;
     fs.writeFileSync(path.join(DATA_DIR, 'recent-memes.json'), JSON.stringify({ guildRecent, globalRecent: globalRecentMemes }, null, 2), 'utf-8');
-  } catch { }
+  } catch (err) { logger.error('Failed to save recent memes', err); }
 }
 
 function loadCommunityVotes(): void {
@@ -316,14 +316,14 @@ function loadCommunityVotes(): void {
         communityVotes.set(communityVoteKey(record.userId, record.memeId, record.guildId), record);
       }
     }
-  } catch { }
+  } catch (err) { logger.error('Failed to load community votes', err); }
 }
 
 function saveCommunityVotes(): void {
   try {
     ensureDataDir();
     fs.writeFileSync(path.join(DATA_DIR, 'community-votes.json'), JSON.stringify(Array.from(communityVotes.values()), null, 2), 'utf-8');
-  } catch { }
+  } catch (err) { logger.error('Failed to save community votes', err); }
 }
 
 export function initDataStore(): void {
@@ -682,7 +682,7 @@ export function upsertGuildConfig(guildId: string, updates: Partial<GuildConfigD
   if (!config) {
     config = {
       guildId, channelId: null, reviewChannelId: null, memeChannelId: null, announcementChannelId: null,
-      autoPostEnabled: false, autoPostInterval: 'hourly', cooldown: 5, lastAutoPost: null,
+      autoPostEnabled: false, autoPostInterval: 'hourly', cooldown: 5, dailySubmitLimit: 3, lastAutoPost: null,
     };
   }
   Object.assign(config, updates);
@@ -748,7 +748,7 @@ export function getFallbackMemes(category: string): CachedMeme | null {
         return { title: entry.title, url: entry.image, imageUrl: entry.image, source: 'arabic-memes', sourceType: 'local' as MemeSourceType, category: (entry.category || 'random') as MemeCategory, nsfw: entry.nsfw || false, cachedAt: new Date().toISOString() };
       }
     }
-  } catch { }
+  } catch (err) { logger.error('Failed to get fallback memes', err); }
   return null;
 }
 

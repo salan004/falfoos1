@@ -213,6 +213,19 @@ async function deployCommands(): Promise<void> {
                 .setDescription('قناة النص لإعلانات الساحة')
                 .setRequired(true)
             )
+        )
+        .addSubcommand(sub =>
+          sub
+            .setName('تعيين-حد-الإرسال')
+            .setDescription('تعيين الحد الأقصى للإرسال اليومي (1-10)')
+            .addIntegerOption(option =>
+              option
+                .setName('الحد')
+                .setDescription('عدد الميمات المسموح بها لكل مستخدم يومياً')
+                .setRequired(true)
+                .setMinValue(1)
+                .setMaxValue(10)
+            )
         ),
     ];
 

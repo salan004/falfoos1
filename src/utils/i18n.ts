@@ -83,6 +83,10 @@ const translations: Record<string, string> = {
   'cmd.config.sub.set-review-channel.desc': 'تعيين القناة لمراجعة الميمات',
   'cmd.config.sub.set-review-channel.opt.channel.name': 'القناة',
   'cmd.config.sub.set-review-channel.opt.channel.desc': 'قناة النص لمراجعة الميمات',
+  'cmd.config.sub.set-submit-limit.name': 'تعيين-حد-الإرسال',
+  'cmd.config.sub.set-submit-limit.desc': 'تعيين الحد الأقصى للإرسال اليومي (1-10)',
+  'cmd.config.sub.set-submit-limit.opt.limit.name': 'الحد',
+  'cmd.config.sub.set-submit-limit.opt.limit.desc': 'عدد الميمات المسموح بها لكل مستخدم يومياً',
 
   // ── Buttons ───────────────────────────────────────────────
   'btn.upvote':                        '👍 {count}',
@@ -213,6 +217,8 @@ const translations: Record<string, string> = {
   'error.no_arabic_memes':             'لا توجد ميمات عربية مناسبة حالياً.',
   'error.submit_limit':                '❌ يمكنك إرسال **3** ميمات فقط في اليوم.',
   'error.submit_duplicate':            '❌ هذه الصورة تم إرسالها بالفعل.',
+  'error.submit_invalid_type':         '❌ يُرجى رفع صورة أو GIF فقط. الفيديو غير مدعوم.',
+  'error.submit_too_large':            '❌ حجم الملف كبير جداً. الحد الأقصى هو 10 ميغابايت.',
   'error.submit_nsfw':                 '❌ هذه الصورة تحتوي على محتوى غير مناسب.',
   'error.submit_no_channel':           '❌ لم يتم العثور على قناة مراجعة. أنشئ قناة **#ميم-مراجعة** أو عيّن واحدة باستخدام `/config set-review-channel`.',
   'error.no_pending':                  '📭 لا توجد ميمات تنتظر المراجعة.',
@@ -236,6 +242,7 @@ const translations: Record<string, string> = {
   'success.review_channel_set':        '✅ تم تعيين قناة المراجعة إلى {channel}.',
   'config.success.announcement_channel_set': '✅ تم تعيين قناة الإعلانات إلى {channel}.',
   'config.success.meme_channel_set':        '✅ تم تعيين قناة ساحة الميم إلى {channel}. سيتم نشر الميمات المعتمدة والفائزين هنا.',
+  'config.success.submit_limit_set':        '✅ تم تعيين حد الإرسال اليومي إلى **{limit}** ميمات.',
   'success.meme_submitted':            '✅ تم إرسال الميم الخاص بك للمراجعة في {channel}!',
   'success.meme_approved':             '✅ تمت الموافقة على الميم! أصبح متاحاً للجميع.',
   'success.meme_rejected':             '❌ تم رفض الميم.',
@@ -259,6 +266,7 @@ const translations: Record<string, string> = {
   'config.enabled':                    '✅ مفعل',
   'config.disabled':                   '❌ معطل',
   'config.review_channel':             'قناة المراجعة',
+  'config.submit_limit':               'حد الإرسال اليومي',
 
   // ── Stats ─────────────────────────────────────────────────
   'stats.submitted':                   'تم الإرسال',

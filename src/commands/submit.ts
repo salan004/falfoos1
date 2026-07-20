@@ -13,7 +13,7 @@ export const data = new SlashCommandBuilder()
   .addAttachmentOption(option =>
     option
       .setName('الميم')
-      .setDescription('ارفع صورة/GIF/فيديو الميم')
+      .setDescription('ارفع صورة/GIF الميم')
       .setRequired(true)
   )
   .addStringOption(option =>
@@ -51,7 +51,8 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     console.log(`Executing submit: User: ${interaction.user.id}, Is Admin/Owner: ${isAdmin}`);
     if (!isAdmin) {
       const todayCount = getUserSubmissionCountToday(interaction.user.id);
-      if (todayCount >= 3) {
+      const dailyLimit = findGuildConfig(interaction.guildId!)?.dailySubmitLimit ?? 3;
+      if (todayCount >= dailyLimit) {
         const embed = new EmbedBuilder()
           .setColor(0xFF0000)
           .setDescription(t('error.submit_limit'));
@@ -64,10 +65,10 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     const title = interaction.options.getString('العنوان') || '';
     const category = (interaction.options.getString('التصنيف') || 'random') as MemeCategory;
 
-    if (!image.contentType?.startsWith('image/')) {
+    if (image.contentType && !image.contentType.startsWith('image/')) {
       const embed = new EmbedBuilder()
         .setColor(0xFF0000)
-        .setDescription(t('error.submit_nsfw'));
+        .setDescription(t('error.submit_invalid_type'));
       await interaction.editReply({ embeds: [embed] });
       return;
     }
@@ -75,7 +76,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     if (image.size > 10 * 1024 * 1024) {
       const embed = new EmbedBuilder()
         .setColor(0xFF0000)
-        .setDescription(t('error.submit_nsfw'));
+        .setDescription(t('error.submit_too_large'));
       await interaction.editReply({ embeds: [embed] });
       return;
     }

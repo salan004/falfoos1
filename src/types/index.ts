@@ -108,6 +108,7 @@ export interface GuildConfigData {
   autoPostEnabled: boolean;
   autoPostInterval: AutoPostInterval;
   cooldown: number;
+  dailySubmitLimit: number;
   lastAutoPost: Date | null;
 }
 

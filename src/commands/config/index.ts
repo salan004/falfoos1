@@ -106,6 +106,19 @@ export const data = new SlashCommandBuilder()
           .setDescription('قناة النص لإعلانات الساحة')
           .setRequired(true)
       )
+  )
+  .addSubcommand(sub =>
+    sub
+      .setName(t('cmd.config.sub.set-submit-limit.name'))
+      .setDescription(t('cmd.config.sub.set-submit-limit.desc'))
+      .addIntegerOption(option =>
+        option
+          .setName(t('cmd.config.sub.set-submit-limit.opt.limit.name'))
+          .setDescription(t('cmd.config.sub.set-submit-limit.opt.limit.desc'))
+          .setRequired(true)
+          .setMinValue(1)
+          .setMaxValue(10)
+      )
   );
 
 export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -147,6 +160,9 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         break;
       case 'تعيين-قناة-الإعلانات':
         await handleSetAnnouncementChannel(interaction);
+        break;
+      case t('cmd.config.sub.set-submit-limit.name'):
+        await handleSetSubmitLimit(interaction);
         break;
     }
   } catch (error) {
@@ -280,6 +296,7 @@ async function handleShow(interaction: ChatInputCommandInteraction): Promise<voi
     ? intervalLabels[guildConfig.autoPostInterval]
     : t('config.not_set');
   const cooldown = guildConfig?.cooldown ?? 5;
+  const dailyLimit = guildConfig?.dailySubmitLimit ?? 3;
 
   const embed = new EmbedBuilder()
     .setColor(0x5865F2)
@@ -292,6 +309,7 @@ async function handleShow(interaction: ChatInputCommandInteraction): Promise<voi
       { name: t('config.status'), value: status, inline: true },
       { name: t('config.interval'), value: intervalDisplay, inline: true },
       { name: t('config.cooldown'), value: `${cooldown} ثانية`, inline: true },
+      { name: t('config.submit_limit'), value: `${dailyLimit}`, inline: true },
     )
     .setFooter({ text: t('footer.config.guild', { id: interaction.guildId! }) })
     .setTimestamp();
@@ -361,4 +379,18 @@ async function handleSetReviewChannel(interaction: ChatInputCommandInteraction):
     .setDescription(t('success.review_channel_set', { channel: channel.toString() }));
   await interaction.editReply({ embeds: [embed] });
   logCommand(interaction.user.id, 'config set-review-channel', interaction.guildId!, { channelId: channel.id });
+}
+
+async function handleSetSubmitLimit(interaction: ChatInputCommandInteraction): Promise<void> {
+  await interaction.deferReply({ flags: ['Ephemeral'] });
+
+  const limit = interaction.options.getInteger(t('cmd.config.sub.set-submit-limit.opt.limit.name'), true);
+
+  upsertGuildConfig(interaction.guildId!, { dailySubmitLimit: limit });
+
+  const embed = new EmbedBuilder()
+    .setColor(0x00FF00)
+    .setDescription(t('config.success.submit_limit_set', { limit }));
+  await interaction.editReply({ embeds: [embed] });
+  logCommand(interaction.user.id, 'config set-submit-limit', interaction.guildId!, { limit });
 }
