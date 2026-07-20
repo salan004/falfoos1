@@ -1,9 +1,8 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, PermissionFlagsBits, AttachmentBuilder } from 'discord.js';
-import fetch from 'node-fetch';
 import { getPendingSubmissions } from '../data/store';
 import { logCommand, logError } from '../utils/logger';
 import { t } from '../utils/i18n';
-import { reviewButtons, safeEmbed, isVideoUrl, getExtension } from '../utils/embed';
+import { reviewButtons, safeEmbed, isVideoUrl, getExtension, fetchVideoBuffer } from '../utils/embed';
 
 export const data = new SlashCommandBuilder()
   .setName('الميمات-قيد-المراجعة')
@@ -48,10 +47,15 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     const buttons = reviewButtons(latest.id);
     const replyOptions: { embeds: any[]; components: any[]; files?: any[] } = { embeds: [embed.build()], components: [buttons] };
     if (video) {
-      const vidResponse = await fetch(latest.imageUrl);
-      const vidBuffer = Buffer.from(await vidResponse.arrayBuffer());
-      replyOptions.files = [new AttachmentBuilder(vidBuffer, { name: `video.${getExtension(latest.imageUrl)}` })];
+      const vidBuffer = await fetchVideoBuffer(latest.imageUrl, 'pending-memes');
+      if (vidBuffer) {
+        replyOptions.files = [new AttachmentBuilder(vidBuffer, { name: `video.${getExtension(latest.imageUrl)}` })];
+      }
     }
+    console.log('[pending-memes] pre-send:', {
+      embeds: replyOptions.embeds.length,
+      files: replyOptions.files ? replyOptions.files.length : 0,
+    });
     await interaction.editReply(replyOptions);
     logCommand(interaction.user.id, 'pending-memes', interaction.guildId!, { count: pending.length });
   } catch (error) {

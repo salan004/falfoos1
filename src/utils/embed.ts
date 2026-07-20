@@ -1,4 +1,5 @@
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder } from 'discord.js';
+import fetch from 'node-fetch';
 import { MemeData, CommunityMeme, UserProfile } from '../types';
 import { t } from './i18n';
 import { getCommunityVoteStats } from '../data/store';
@@ -26,6 +27,33 @@ export function getExtension(url: string): string {
     }
   } catch { }
   return 'mp4';
+}
+
+export async function fetchVideoBuffer(url: string, label: string = 'unknown'): Promise<Buffer | null> {
+  try {
+    const response = await fetch(url);
+    console.log(`[fetchVideoBuffer:${label}]`, {
+      url: url.slice(0, 120),
+      status: response.status,
+      ok: response.ok,
+      contentType: response.headers.get('content-type'),
+      contentLength: response.headers.get('content-length'),
+    });
+    if (!response.ok) {
+      console.error(`[fetchVideoBuffer:${label}] HTTP ${response.status} for ${url.slice(0, 80)}`);
+      return null;
+    }
+    const buffer = Buffer.from(await response.arrayBuffer());
+    if (buffer.length === 0) {
+      console.error(`[fetchVideoBuffer:${label}] Empty buffer`);
+      return null;
+    }
+    console.log(`[fetchVideoBuffer:${label}] buffer size: ${buffer.length}`);
+    return buffer;
+  } catch (err) {
+    console.error(`[fetchVideoBuffer:${label}] Network error:`, err);
+    return null;
+  }
 }
 
 export function buildMemeEmbed(meme: MemeData, requesterName?: string): EmbedBuilder {

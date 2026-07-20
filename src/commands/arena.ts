@@ -1,7 +1,6 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, AttachmentBuilder } from 'discord.js';
-import fetch from 'node-fetch';
 import { getTopVotingMemes, getCommunityVoteStats } from '../data/store';
-import { buildArenaMemeEmbed, arenaVoteButtons, buildArenaHeaderEmbed, isVideoUrl, getExtension } from '../utils/embed';
+import { buildArenaMemeEmbed, arenaVoteButtons, buildArenaHeaderEmbed, isVideoUrl, getExtension, fetchVideoBuffer } from '../utils/embed';
 import { checkCooldown } from '../utils/cooldown';
 import { logCommand } from '../utils/logger';
 import { t } from '../utils/i18n';
@@ -41,13 +40,18 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     });
     const videoMemes = topMemes.filter(m => isVideoUrl(m.imageUrl));
     const videoFiles = videoMemes.length > 0
-      ? await Promise.all(videoMemes.map(async (m, i) => {
-          const vidResponse = await fetch(m.imageUrl);
-          const vidBuffer = Buffer.from(await vidResponse.arrayBuffer());
+      ? (await Promise.all(videoMemes.map(async (m, i) => {
+          const vidBuffer = await fetchVideoBuffer(m.imageUrl, `arena_${i}`);
+          if (!vidBuffer) return null;
           return new AttachmentBuilder(vidBuffer, { name: `video_${i}.${getExtension(m.imageUrl)}` });
-        }))
+        }))).filter(Boolean) as AttachmentBuilder[]
       : [];
 
+    console.log('[arena] pre-send:', {
+      embeds: embeds.length,
+      videoFiles: videoFiles.length,
+      components: components.length,
+    });
     await interaction.editReply({ embeds, components, files: videoFiles.length > 0 ? videoFiles : undefined });
     logCommand(interaction.user.id, 'arena', interaction.guildId!, { count: topMemes.length, topScores: topMemes.map(m => m.score) });
   } catch (error) {

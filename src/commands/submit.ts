@@ -1,9 +1,8 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, TextChannel, GuildMember, AttachmentBuilder } from 'discord.js';
-import fetch from 'node-fetch';
 import { addPendingSubmission, updatePendingSubmissionUrl, isDuplicateImage, getUserSubmissionCountToday, findGuildConfig, incrementUserSubmissions, updateUserProfile } from '../data/store';
 import { logCommand, logError } from '../utils/logger';
 import { t } from '../utils/i18n';
-import { reviewButtons, safeEmbed } from '../utils/embed';
+import { reviewButtons, safeEmbed, fetchVideoBuffer } from '../utils/embed';
 import { filterContent } from '../utils/contentFilter';
 import { memberHasAdminAccess } from '../utils/permissions';
 import { MemeCategory } from '../types';
@@ -136,8 +135,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       avatarUrl: interaction.user.displayAvatarURL(),
     });
 
-    const response = await fetch(image.url);
-    const buffer = Buffer.from(await response.arrayBuffer());
+    const buffer = await fetchVideoBuffer(image.url, 'submit');
     const originalName = image.name || '';
     const dotIndex = originalName.lastIndexOf('.');
     const originalExt = dotIndex >= 0 ? originalName.slice(dotIndex + 1).toLowerCase() : '';
@@ -162,14 +160,38 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     }
 
     const buttons = reviewButtons(submission.id);
-    const fileAttachment = new AttachmentBuilder(buffer, { name: fileName });
-    const reviewMsg = await reviewChannel.send({
+    let fileAttachment: AttachmentBuilder | null = null;
+    if (buffer) {
+      fileAttachment = new AttachmentBuilder(buffer, { name: fileName });
+    }
+    const sendPayload: { embeds: any[]; components: any[]; files?: any[] } = {
       embeds: [embed.build()],
       components: [buttons],
-      files: [fileAttachment],
+    };
+    if (fileAttachment) {
+      sendPayload.files = [fileAttachment];
+    }
+    console.log('[submit] pre-send payload:', {
+      embeds: sendPayload.embeds.length,
+      components: sendPayload.components.length,
+      files: sendPayload.files ? sendPayload.files.length : 0,
+      fileName: fileAttachment?.name,
+    });
+    const reviewMsg = await reviewChannel.send(sendPayload);
+    console.log('[submit] post-send attachments:', {
+      count: reviewMsg.attachments.size,
+      attachments: [...reviewMsg.attachments.values()].map(a => ({
+        name: a.name,
+        contentType: a.contentType,
+        url: a.url.slice(0, 100),
+      })),
     });
 
-    const permanentUrl = reviewMsg.attachments.first()!.url;
+    const firstAttachment = reviewMsg.attachments.first();
+    if (!firstAttachment) {
+      throw new Error('No attachment in review message after send — Discord rejected the file');
+    }
+    const permanentUrl = firstAttachment.url;
     updatePendingSubmissionUrl(submission.id, permanentUrl);
 
     if (!isVideo) {
