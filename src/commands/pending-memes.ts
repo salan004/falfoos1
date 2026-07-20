@@ -1,8 +1,8 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, PermissionFlagsBits } from 'discord.js';
+import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, PermissionFlagsBits, AttachmentBuilder } from 'discord.js';
 import { getPendingSubmissions } from '../data/store';
 import { logCommand, logError } from '../utils/logger';
 import { t } from '../utils/i18n';
-import { reviewButtons, safeEmbed } from '../utils/embed';
+import { reviewButtons, safeEmbed, isVideoUrl } from '../utils/embed';
 
 export const data = new SlashCommandBuilder()
   .setName('الميمات-قيد-المراجعة')
@@ -24,23 +24,32 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     }
 
     const latest = pending[pending.length - 1];
+    const video = isVideoUrl(latest.imageUrl);
 
     const embed = safeEmbed()
       .setColor(0xF1C40F)
       .setTitle(t('embed.review.title'))
-      .setImage(latest.imageUrl)
       .addFields(
         { name: '👤', value: `<@${latest.authorId}>`, inline: true },
         { name: '#️⃣', value: latest.category, inline: true },
         { name: '📅', value: new Date(latest.submittedAt).toLocaleDateString('ar-SA'), inline: true },
       )
       .setFooter(`📝 ${pending.length} ${t('embed.mymemes.status_pending')} • ${t('footer.submitted', { user: latest.authorId, date: new Date(latest.submittedAt).toLocaleDateString('ar-SA') })}`)
-      .setTimestamp()
-      .setDescription(latest.title ? `**${latest.title}**` : undefined)
-      .build();
+      .setTimestamp();
+
+    if (!video) {
+      embed.setImage(latest.imageUrl);
+    }
+    if (latest.title) {
+      embed.setDescription(`**${latest.title}**`);
+    }
 
     const buttons = reviewButtons(latest.id);
-    await interaction.editReply({ embeds: [embed], components: [buttons] });
+    const replyOptions: { embeds: any[]; components: any[]; files?: any[] } = { embeds: [embed.build()], components: [buttons] };
+    if (video) {
+      replyOptions.files = [new AttachmentBuilder(latest.imageUrl, { name: 'video.mp4' })];
+    }
+    await interaction.editReply(replyOptions);
     logCommand(interaction.user.id, 'pending-memes', interaction.guildId!, { count: pending.length });
   } catch (error) {
     logError('pending-memes command', error);

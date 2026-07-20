@@ -1,5 +1,6 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, TextChannel, GuildMember } from 'discord.js';
-import { addPendingSubmission, isDuplicateImage, getUserSubmissionCountToday, findGuildConfig, incrementUserSubmissions, updateUserProfile } from '../data/store';
+import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, TextChannel, GuildMember, AttachmentBuilder } from 'discord.js';
+import fetch from 'node-fetch';
+import { addPendingSubmission, updatePendingSubmissionUrl, isDuplicateImage, getUserSubmissionCountToday, findGuildConfig, incrementUserSubmissions, updateUserProfile } from '../data/store';
 import { logCommand, logError } from '../utils/logger';
 import { t } from '../utils/i18n';
 import { reviewButtons, safeEmbed } from '../utils/embed';
@@ -122,9 +123,19 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       return;
     }
 
+    const response = await fetch(image.url);
+    const buffer = Buffer.from(await response.arrayBuffer());
+    const fileExt = isVideo ? 'mp4' : 'png';
+    const fileName = `meme_${Date.now()}.${fileExt}`;
+
+    const tempAttachment = new AttachmentBuilder(buffer, { name: fileName });
+    const tempMsg = await reviewChannel.send({ files: [tempAttachment] });
+    const permanentUrl = tempMsg.attachments.first()!.url;
+    await tempMsg.delete().catch(() => {});
+
     const submission = addPendingSubmission({
       authorId: interaction.user.id,
-      imageUrl: image.url,
+      imageUrl: permanentUrl,
       title,
       category,
     });
@@ -138,7 +149,6 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     const embed = safeEmbed()
       .setColor(0x9B59B6)
       .setTitle(t('submit.embed.title'))
-      .setImage(image.url)
       .addFields(
         { name: t('submit.embed.author'), value: `<@${interaction.user.id}>`, inline: true },
         { name: t('submit.embed.category'), value: category, inline: true },
@@ -146,13 +156,22 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         { name: t('submit.embed.id'), value: `\`${submission.id.slice(0, 8)}\``, inline: true },
         { name: t('submit.embed.status'), value: t('submit.embed.status_pending'), inline: true },
       )
-      .setDescription(title ? `**${title}**` : undefined)
       .setFooter(t('submit.embed.footer', { user: interaction.user.tag }))
-      .setTimestamp()
-      .build();
+      .setTimestamp();
+
+    if (!isVideo) {
+      embed.setImage(permanentUrl);
+    }
+    if (title) {
+      embed.setDescription(`**${title}**`);
+    }
 
     const buttons = reviewButtons(submission.id);
-    await reviewChannel.send({ embeds: [embed], components: [buttons] });
+    const sendOptions: { embeds: any[]; components: any[]; files?: any[] } = { embeds: [embed.build()], components: [buttons] };
+    if (isVideo) {
+      sendOptions.files = [new AttachmentBuilder(buffer, { name: fileName })];
+    }
+    await reviewChannel.send(sendOptions);
 
     const successEmbed = safeEmbed()
       .setColor(0x00FF00)

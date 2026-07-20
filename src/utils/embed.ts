@@ -1,10 +1,15 @@
-import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder } from 'discord.js';
 import { MemeData, CommunityMeme, UserProfile } from '../types';
 import { t } from './i18n';
 import { getCommunityVoteStats } from '../data/store';
 
 function sourceLabel(sourceType: string): string {
   return t(`embed.source.${sourceType}`);
+}
+
+export function isVideoUrl(url: string): boolean {
+  const clean = url.split('?')[0].toLowerCase();
+  return clean.endsWith('.mp4') || clean.endsWith('.mov') || clean.endsWith('.webm');
 }
 
 export function buildMemeEmbed(meme: MemeData, requesterName?: string): EmbedBuilder {
@@ -14,8 +19,11 @@ export function buildMemeEmbed(meme: MemeData, requesterName?: string): EmbedBui
   let footerText = `${srcLabel} • ${t('footer.source', { source: meme.source })}`;
   if (requesterName) footerText += t('footer.requested', { user: requesterName });
   const embed = new EmbedBuilder()
-    .setColor(0x9B59B6).setTitle(`${emoji} ${meme.title}`).setURL(meme.url).setImage(meme.imageUrl)
+    .setColor(0x9B59B6).setTitle(`${emoji} ${meme.title}`).setURL(meme.url)
     .setFooter({ text: footerText }).setTimestamp();
+  if (!isVideoUrl(meme.imageUrl)) {
+    embed.setImage(meme.imageUrl);
+  }
   if (meme.author) embed.setAuthor({ name: t('footer.author', { author: meme.author }) });
   return embed;
 }
@@ -25,13 +33,16 @@ export function buildArenaMemeEmbed(meme: CommunityMeme): EmbedBuilder {
   const emoji = categoryEmojis[meme.category] || '🎭';
   const stats = getCommunityVoteStats(meme.id);
   const embed = new EmbedBuilder()
-    .setColor(0x9B59B6).setTitle(`${emoji} ${meme.title || t('footer.community')}`).setImage(meme.imageUrl)
+    .setColor(0x9B59B6).setTitle(`${emoji} ${meme.title || t('footer.community')}`)
     .addFields(
       { name: '👤', value: `<@${meme.authorId}>`, inline: true },
       { name: '📊', value: `😂 ${stats.funny} 🔥 ${stats.legendary} ❤️ ${stats.likes}`, inline: true },
       { name: '📅', value: new Date(meme.createdAt).toLocaleDateString('ar-SA'), inline: true },
     )
     .setFooter({ text: `${t('footer.community')} • 🆔 ${meme.id.slice(0, 8)}` }).setTimestamp();
+  if (!isVideoUrl(meme.imageUrl)) {
+    embed.setImage(meme.imageUrl);
+  }
   if (meme.voting && meme.expiresAt) {
     const remaining = new Date(meme.expiresAt).getTime() - Date.now();
     if (remaining > 0) {
@@ -47,14 +58,18 @@ export function buildWinnerEmbed(meme: CommunityMeme, placement: number): EmbedB
   const stats = getCommunityVoteStats(meme.id);
   const medals = ['🥇', '🥈', '🥉'];
   const medal = medals[placement - 1] || '';
-  return new EmbedBuilder()
+  const embed = new EmbedBuilder()
     .setColor(0xF1C40F).setTitle(`${medal} ${t('winner.announcement')}`)
-    .setImage(meme.imageUrl).setDescription(meme.title || t('footer.community'))
+    .setDescription(meme.title || t('footer.community'))
     .addFields(
       { name: '👤', value: `<@${meme.authorId}>`, inline: true },
       { name: '📊', value: t('winner.stats', { funny: stats.funny, legendary: stats.legendary, likes: stats.likes, score: stats.score }), inline: true },
       { name: '🎁', value: placement === 1 ? t('common.point') : t('common.honorable_mention'), inline: true },
     ).setTimestamp();
+  if (!isVideoUrl(meme.imageUrl)) {
+    embed.setImage(meme.imageUrl);
+  }
+  return embed;
 }
 
 export function buildProfileEmbed(profile: UserProfile, rank: number, totalUsers: number, topMeme: CommunityMeme | null): EmbedBuilder {
@@ -160,7 +175,9 @@ export class SafeEmbedBuilder {
 
   setDescription(value: unknown, fallback?: string): this {
     const result = safeStringTrimmed(value, fallback, DISCORD_DESC_MAX);
-    this.embed.setDescription(result || null);
+    if (result) {
+      this.embed.setDescription(result);
+    }
     return this;
   }
 

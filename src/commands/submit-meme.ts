@@ -1,5 +1,6 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, TextChannel, GuildMember } from 'discord.js';
-import { addPendingSubmission, isDuplicateImage, getUserSubmissionCountToday, findGuildConfig, incrementUserSubmissions, updateUserProfile } from '../data/store';
+import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, TextChannel, GuildMember, AttachmentBuilder } from 'discord.js';
+import fetch from 'node-fetch';
+import { addPendingSubmission, updatePendingSubmissionUrl, isDuplicateImage, getUserSubmissionCountToday, findGuildConfig, incrementUserSubmissions, updateUserProfile } from '../data/store';
 import { logCommand, logError } from '../utils/logger';
 import { t } from '../utils/i18n';
 import { reviewButtons, safeEmbed } from '../utils/embed';
@@ -122,9 +123,19 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       return;
     }
 
+    const response = await fetch(image.url);
+    const buffer = Buffer.from(await response.arrayBuffer());
+    const fileExt = isVideo ? 'mp4' : 'png';
+    const fileName = `meme_${Date.now()}.${fileExt}`;
+
+    const tempAttachment = new AttachmentBuilder(buffer, { name: fileName });
+    const tempMsg = await reviewChannel.send({ files: [tempAttachment] });
+    const permanentUrl = tempMsg.attachments.first()!.url;
+    await tempMsg.delete().catch(() => {});
+
     const submission = addPendingSubmission({
       authorId: interaction.user.id,
-      imageUrl: image.url,
+      imageUrl: permanentUrl,
       title,
       category,
     });
@@ -138,19 +149,27 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     const embed = safeEmbed()
       .setColor(0xF1C40F)
       .setTitle(t('embed.review.title'))
-      .setImage(image.url)
       .addFields(
         { name: '👤', value: `<@${interaction.user.id}>`, inline: true },
         { name: '#️⃣', value: category, inline: true },
         { name: '📅', value: new Date().toLocaleDateString('ar-SA'), inline: true },
       )
       .setFooter(t('footer.submitted', { user: interaction.user.tag, date: new Date().toLocaleDateString('ar-SA') }))
-      .setTimestamp()
-      .setDescription(title ? `**${title}**` : undefined)
-      .build();
+      .setTimestamp();
+
+    if (!isVideo) {
+      embed.setImage(permanentUrl);
+    }
+    if (title) {
+      embed.setDescription(`**${title}**`);
+    }
 
     const buttons = reviewButtons(submission.id);
-    await reviewChannel.send({ embeds: [embed], components: [buttons] });
+    const sendOptions: { embeds: any[]; components: any[]; files?: any[] } = { embeds: [embed.build()], components: [buttons] };
+    if (isVideo) {
+      sendOptions.files = [new AttachmentBuilder(buffer, { name: fileName })];
+    }
+    await reviewChannel.send(sendOptions);
 
     const successEmbed = safeEmbed()
       .setColor(0x00FF00)

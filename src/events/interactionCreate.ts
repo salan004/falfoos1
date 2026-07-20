@@ -1,8 +1,8 @@
-import { Events, Interaction, EmbedBuilder, PermissionFlagsBits } from 'discord.js';
+import { Events, Interaction, EmbedBuilder, PermissionFlagsBits, AttachmentBuilder } from 'discord.js';
 import { findCommunityVote, createCommunityVote, updateCommunityVote, getCommunityVoteStats, getCommunityMemesByCategory, getWeightedRandomMeme, addRecentMeme, getRecentMemeIds, approveSubmission, rejectSubmission, getPendingSubmissions, getApprovedCommunityMemes, getUserStats, isMemeExpired, finalizeMemeVoting, findFavorite, createFavorite, findGuildConfig, getPendingSubmissionById } from '../data/store';
 import { logCommand, logError } from '../utils/logger';
 import { t } from '../utils/i18n';
-import { buildMemeEmbed, buildArenaMemeEmbed, arenaVoteButtons, reviewButtons, safeEmbed } from '../utils/embed';
+import { buildMemeEmbed, buildArenaMemeEmbed, arenaVoteButtons, reviewButtons, safeEmbed, isVideoUrl } from '../utils/embed';
 import { fetchMeme } from '../utils/memeApi';
 import { canPostNsfw } from '../utils/nsfw';
 import { getTopVotedMemes, getTopContributors, getMostActiveUsers } from '../services/leaderboardService';
@@ -283,7 +283,11 @@ async function handleNextCommunityMeme(interaction: any): Promise<void> {
   const stats = getCommunityVoteStats(meme.id);
   const embed = buildArenaMemeEmbed(meme);
   const buttons = arenaVoteButtons(meme.id, stats.funny, stats.legendary, stats.likes, !meme.voting);
-  await interaction.editReply({ embeds: [embed], components: [buttons] });
+  const replyOptions: { embeds: any[]; components: any[]; files?: any[] } = { embeds: [embed], components: [buttons] };
+  if (isVideoUrl(meme.imageUrl)) {
+    replyOptions.files = [new AttachmentBuilder(meme.imageUrl, { name: 'video.mp4' })];
+  }
+  await interaction.editReply(replyOptions);
 }
 
 async function handleApprove(interaction: any): Promise<void> {
@@ -313,7 +317,6 @@ async function handleApprove(interaction: any): Promise<void> {
   const approvedEmbed = safeEmbed()
     .setColor(0x00FF00)
     .setTitle(t('ic.approved.title'))
-    .setImage(meme.imageUrl)
     .setDescription(meme.title || 'No description provided')
     .addFields(
       { name: t('ic.approved.author'), value: `<@${meme.authorId}>`, inline: true },
@@ -323,7 +326,14 @@ async function handleApprove(interaction: any): Promise<void> {
     .setTimestamp()
     .build();
 
-  await interaction.editReply({ embeds: [approvedEmbed], components: [] });
+  if (!isVideoUrl(meme.imageUrl)) {
+    approvedEmbed.setImage(meme.imageUrl);
+  }
+  const approveOptions: { embeds: any[]; components: any[]; files?: any[] } = { embeds: [approvedEmbed], components: [] };
+  if (isVideoUrl(meme.imageUrl)) {
+    approveOptions.files = [new AttachmentBuilder(meme.imageUrl, { name: 'video.mp4' })];
+  }
+  await interaction.editReply(approveOptions);
 
   if (guildConfig?.memeChannelId) {
     try {
@@ -331,7 +341,11 @@ async function handleApprove(interaction: any): Promise<void> {
       if (memeChannel?.isTextBased()) {
         const arenaEmbed = buildArenaMemeEmbed(meme);
         const voteButtons = arenaVoteButtons(meme.id, 0, 0, 0, false);
-        await memeChannel.send({ embeds: [arenaEmbed], components: [voteButtons] });
+        const arenaOptions: { embeds: any[]; components: any[]; files?: any[] } = { embeds: [arenaEmbed], components: [voteButtons] };
+        if (isVideoUrl(meme.imageUrl)) {
+          arenaOptions.files = [new AttachmentBuilder(meme.imageUrl, { name: 'video.mp4' })];
+        }
+        await memeChannel.send(arenaOptions);
       }
     } catch (err) {
       logError('Failed to post approved meme to arena channel', err);
@@ -343,10 +357,16 @@ async function handleApprove(interaction: any): Promise<void> {
     const dmEmbed = safeEmbed()
       .setColor(0x00FF00)
       .setTitle(t('ic.dm_approved.title'))
-      .setImage(meme.imageUrl)
       .setDescription(t('ic.dm_approved.desc'))
       .build();
-    await author.send({ embeds: [dmEmbed] }).catch(() => {});
+    if (!isVideoUrl(meme.imageUrl)) {
+      dmEmbed.setImage(meme.imageUrl);
+    }
+    const dmOptions: { embeds: any[]; files?: any[] } = { embeds: [dmEmbed] };
+    if (isVideoUrl(meme.imageUrl)) {
+      dmOptions.files = [new AttachmentBuilder(meme.imageUrl, { name: 'video.mp4' })];
+    }
+    await author.send(dmOptions).catch(() => {});
   } catch { }
 
   logCommand(interaction.user.id, 'approve', interaction.guildId, { submissionId });

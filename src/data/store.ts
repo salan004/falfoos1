@@ -786,6 +786,14 @@ export function addPendingSubmission(data: { authorId: string; imageUrl: string;
   return submission;
 }
 
+export function updatePendingSubmissionUrl(id: string, newUrl: string): boolean {
+  const submission = pendingSubmissions.find(s => s.id === id);
+  if (!submission) return false;
+  submission.imageUrl = newUrl;
+  savePendingSubmissions();
+  return true;
+}
+
 export function approveSubmission(id: string): CommunityMeme | null {
   const index = pendingSubmissions.findIndex(s => s.id === id);
   if (index === -1) return null;
